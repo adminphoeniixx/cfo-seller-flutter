@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "492941274184",
+    "project_id": "seller-910c9",
+    "storage_bucket": "seller-910c9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:492941274184:android:1e3863e66b3c5005113c7d",
+        "android_client_info": {
+          "package_name": "com.cfo.seller_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6iSFSfG2FLObKu3uTJ3lmQKNNZyEEbpg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
