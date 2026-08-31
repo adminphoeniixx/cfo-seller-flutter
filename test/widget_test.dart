@@ -28,6 +28,7 @@ import 'package:seller_app/shared/models/device.dart';
 import 'package:seller_app/shared/models/order.dart';
 import 'package:seller_app/shared/models/payout.dart';
 import 'package:seller_app/shared/models/product.dart';
+import 'package:seller_app/shared/models/product_payload.dart';
 import 'package:seller_app/shared/models/seller.dart';
 import 'package:seller_app/shared/models/service_request.dart';
 import 'package:seller_app/shared/models/shipping_rate.dart';
@@ -543,25 +544,14 @@ class _FakeProductRepository implements ProductRepository {
       const Success(null);
 
   @override
-  Future<NetworkResult<Product>> createProduct({
-    required String name,
-    required double price,
-    double? compareAt,
-    required int stock,
-    required int lowStockThreshold,
-    required bool asDraft,
-  }) async => Success(Product.fromJson(_realProductJson));
+  Future<NetworkResult<Product>> createProduct(ProductPayload payload) async =>
+      Success(Product.fromJson(_realProductJson));
 
   @override
   Future<NetworkResult<Product>> updateProduct(
-    int id, {
-    required String name,
-    required double price,
-    double? compareAt,
-    required int stock,
-    required int lowStockThreshold,
-    required bool asDraft,
-  }) async => Success(Product.fromJson(_realProductJson));
+    int id,
+    ProductPayload payload,
+  ) async => Success(Product.fromJson(_realProductJson));
 
   @override
   Future<NetworkResult<Product>> updateStock(
@@ -951,8 +941,10 @@ void main() {
 
     router.push(AppRoutes.newProduct);
     await settlePastLoading(tester);
+    // The form now has a single Save action (status is a form field, not a
+    // second save button) — see `NewProductScreen`'s doc comment.
     expect(find.text('New product'), findsOneWidget);
-    expect(find.text('Publish product'), findsOneWidget);
+    expect(find.text('Save'), findsOneWidget);
 
     router.push(AppRoutes.notifications);
     await settlePastLoading(tester);

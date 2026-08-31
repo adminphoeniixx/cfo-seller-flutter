@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Clickable prototype of the CFO seller app. Hand this to whoever builds the mobile app, alongside docs/seller-api.md.">
+<title>CFO Seller — app prototype</title>
+</head>
+<body>
+
+<style>
+    :root {
+        --ground: #eef0ee;
+        --surface: #ffffff;
+        --surface-2: #f7f9f7;
+        --line: #dfe3df;
+        --line-soft: #ebeeeb;
+        --ink: #2c302c;
+        --ink-2: #5d635d;
+        --ink-3: #8a908a;
+        --chrome: #171917;
+        --accent: #36fba1;
+        --accent-ink: #0c5132;
+        --action: #005bd3;
+        --critical: #e51c00;
+        --ok-bg: #cdfee1; --ok-ink: #0c5132;
+        --warn-bg: #ffd6a4; --warn-ink: #5e4200;
+        --info-bg: #ebf5ff; --info-ink: #00527c;
+        --crit-bg: #ffe5e2; --crit-ink: #8e1f00;
+        --page: #d7dcd8;
+        --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --ground: #0d0f0d; --surface: #171a17; --surface-2: #1f231f;
+            --line: #2f342f; --line-soft: #232823;
+            --ink: #e2e6e2; --ink-2: #b0b6b0; --ink-3: #848a84;
+            --ok-bg: #0c5132; --ok-ink: #cdfee1;
+            --warn-bg: #5e4200; --warn-ink: #ffd6a4;
+            --info-bg: #002d47; --info-ink: #a5d3ff;
+            --crit-bg: #5c1400; --crit-ink: #ffd6cf;
+            --page: #050605;
+        }
+    }
+
+    :root[data-theme="dark"] {
+        --ground: #0d0f0d; --surface: #171a17; --surface-2: #1f231f;
+        --line: #2f342f; --line-soft: #232823;
+        --ink: #e2e6e2; --ink-2: #b0b6b0; --ink-3: #848a84;
+        --ok-bg: #0c5132; --ok-ink: #cdfee1;
+        --warn-bg: #5e4200; --warn-ink: #ffd6a4;
+        --info-bg: #002d47; --info-ink: #a5d3ff;
+        --crit-bg: #5c1400; --crit-ink: #ffd6cf;
+        --page: #050605;
+    }
+
+    :root[data-theme="light"] {
+        --ground: #eef0ee; --surface: #ffffff; --surface-2: #f7f9f7;
+        --line: #dfe3df; --line-soft: #ebeeeb;
+        --ink: #2c302c; --ink-2: #5d635d; --ink-3: #8a908a;
+        --ok-bg: #cdfee1; --ok-ink: #0c5132;
+        --warn-bg: #ffd6a4; --warn-ink: #5e4200;
+        --info-bg: #ebf5ff; --info-ink: #00527c;
+        --crit-bg: #ffe5e2; --crit-ink: #8e1f00;
+        --page: #d7dcd8;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    /* `.iconbtn { display: grid }` outranks the UA rule for [hidden], so the
+       chrome buttons have to be hidden explicitly or they never go away. */
+    [hidden] { display: none !important; }
+
+    body {
+        margin: 0;
+        background: var(--page);
+        font-family: var(--sans);
+        color: var(--ink);
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        padding: 24px;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* --------------------------------------------------------- the device */
+
+    .device {
+        width: 390px;
+        height: 844px;
+        max-height: calc(100vh - 48px);
+        border-radius: 46px;
+        background: #101210;
+        padding: 11px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .3), 0 30px 70px rgba(0, 0, 0, .35);
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 460px), (max-height: 700px) {
+        body { padding: 0; display: block; }
+        .device {
+            width: 100%; height: 100vh; max-height: none;
+            border-radius: 0; padding: 0; box-shadow: none;
+        }
+        .app { border-radius: 0 !important; }
+    }
+
+    .app {
+        position: relative;
+        height: 100%;
+        border-radius: 36px;
+        overflow: hidden;
+        background: var(--ground);
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* ---------------------------------------------------------- app chrome */
+
+    .statusbar {
+        background: var(--chrome);
+        color: #fff;
+        font-size: 11px;
+        font-family: var(--mono);
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 24px 3px;
+        opacity: .8;
+        flex-shrink: 0;
+    }
+
+    .appbar {
+        background: var(--chrome);
+        color: #fff;
+        padding: 6px 12px 13px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        min-height: 52px;
+    }
+
+    .appbar .titles { min-width: 0; flex: 1; }
+    .appbar .t { font-size: 17px; font-weight: 650; letter-spacing: -.015em; display: block; }
+    .appbar .s { font-size: 11.5px; opacity: .6; display: block; margin-top: 1px; }
+
+    .iconbtn {
+        width: 34px; height: 34px;
+        display: grid; place-items: center;
+        border-radius: 10px;
+        border: 0; background: transparent;
+        color: #fff; font-size: 17px;
+        cursor: pointer; flex-shrink: 0;
+        font-family: inherit;
+    }
+
+    .iconbtn:hover { background: rgba(255, 255, 255, .12); }
+    .iconbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+    .iconbtn.text { width: auto; padding: 0 10px; font-size: 14px; font-weight: 650; color: var(--accent); }
+
+    .bell { position: relative; }
+
+    .bell .dot {
+        position: absolute; top: 6px; right: 6px;
+        min-width: 15px; height: 15px; padding: 0 4px;
+        border-radius: 9px; background: var(--critical);
+        color: #fff; font-size: 9.5px; font-weight: 700;
+        display: grid; place-items: center; line-height: 1;
+    }
+
+    /* ------------------------------------------------------------- screens */
+
+    .stage { position: relative; flex: 1; overflow: hidden; }
+
+    .screen {
+        position: absolute;
+        inset: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        padding: 14px 14px 20px;
+        display: none;
+        flex-direction: column;
+        gap: 11px;
+    }
+
+    .screen.on { display: flex; animation: slide .22s cubic-bezier(.2, .7, .3, 1); }
+    .screen.plain { background: var(--surface); }
+
+    @keyframes slide {
+        from { opacity: 0; transform: translateX(14px); }
+        to { opacity: 1; transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .screen.on { animation: none; }
+    }
+
+    /* -------------------------------------------------------------- tabbar */
+
+    .tabbar {
+        display: flex;
+        background: var(--surface);
+        border-top: 1px solid var(--line);
+        padding: 7px 4px 10px;
+        flex-shrink: 0;
+    }
+
+    .tabbar button {
+        flex: 1; border: 0; background: transparent; cursor: pointer;
+        display: grid; gap: 3px; justify-items: center;
+        font-size: 10px; color: var(--ink-3); font-family: inherit;
+        padding: 2px 0;
+    }
+
+    .tabbar button.on { color: var(--action); font-weight: 650; }
+    .tabbar button:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; border-radius: 8px; }
+    .tabbar svg { width: 21px; height: 21px; fill: currentColor; }
+    .tabbar.hide { display: none; }
+
+    /* ---------------------------------------------------------- components */
+
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        padding: 13px;
+    }
+
+    .card.flat { padding: 0; overflow: hidden; }
+    .card.pad0 { padding: 0; }
+
+    .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+    .kpi {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: 13px; padding: 11px 12px;
+    }
+
+    .kpi .k {
+        font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em;
+        color: var(--ink-3); font-weight: 700;
+    }
+
+    .kpi .v {
+        font-size: 21px; font-weight: 750; letter-spacing: -.025em;
+        font-variant-numeric: tabular-nums; margin-top: 2px;
+    }
+
+    .kpi .d { font-size: 10px; color: var(--ink-3); margin-top: 1px; }
+
+    .sect {
+        font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+        color: var(--ink-3); font-weight: 700; padding: 4px 2px 0;
+        display: flex; justify-content: space-between; align-items: baseline;
+    }
+
+    .sect a { color: var(--action); text-transform: none; letter-spacing: 0; font-size: 11.5px; font-weight: 600; text-decoration: none; cursor: pointer; }
+
+    .row {
+        display: flex; align-items: center; gap: 10px;
+        padding: 11px 12px;
+        border-bottom: 1px solid var(--line-soft);
+        background: var(--surface);
+        width: 100%; border-left: 0; border-right: 0; border-top: 0;
+        text-align: left; font-family: inherit; color: inherit;
+        cursor: pointer;
+    }
+
+    .row:last-child { border-bottom: 0; }
+    .row:active { background: var(--surface-2); }
+    .row:focus-visible { outline: 2px solid var(--action); outline-offset: -2px; }
+    .row.static { cursor: default; }
+    .row .grow { flex: 1; min-width: 0; }
+    .row .t { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .row .t span.txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row .s { font-size: 11.5px; color: var(--ink-3); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row .amt { font-size: 13.5px; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .row .chev { color: var(--ink-3); font-size: 17px; }
+
+    .thumb {
+        width: 40px; height: 40px; border-radius: 9px;
+        background: linear-gradient(135deg, var(--line) 0%, var(--surface-2) 100%);
+        border: 1px solid var(--line); flex-shrink: 0;
+        display: grid; place-items: center; font-size: 17px;
+    }
+
+    .pill {
+        display: inline-block; font-size: 9.5px; font-weight: 700;
+        padding: 2px 7px; border-radius: 20px; white-space: nowrap;
+    }
+
+    .pill.ok { background: var(--ok-bg); color: var(--ok-ink); }
+    .pill.warn { background: var(--warn-bg); color: var(--warn-ink); }
+    .pill.crit { background: var(--crit-bg); color: var(--crit-ink); }
+    .pill.info { background: var(--info-bg); color: var(--info-ink); }
+    .pill.mute { background: var(--line); color: var(--ink-2); }
+
+    .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+
+    .chip {
+        font-size: 11.5px; padding: 6px 12px; border-radius: 20px;
+        background: var(--surface); border: 1px solid var(--line);
+        color: var(--ink-2); white-space: nowrap; cursor: pointer;
+        font-family: inherit;
+    }
+
+    .chip.on { background: var(--ink); border-color: var(--ink); color: var(--surface); font-weight: 600; }
+    .chip:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+    .btn {
+        display: block; width: 100%; text-align: center;
+        font-size: 14px; font-weight: 650; padding: 13px;
+        border-radius: 11px; background: var(--action); color: #fff;
+        border: 0; cursor: pointer; font-family: inherit;
+    }
+
+    .btn:active { filter: brightness(.92); }
+    .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+    .btn.dark { background: var(--ink); color: var(--surface); }
+    .btn.danger { background: transparent; color: var(--critical); }
+    .btn[disabled] { opacity: .45; cursor: not-allowed; }
+
+    .field {
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: 11px; padding: 9px 12px; width: 100%;
+        text-align: left; font-family: inherit; cursor: text;
+    }
+
+    .field .lbl {
+        font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em;
+        color: var(--ink-3); font-weight: 700;
+    }
+
+    .field input, .field .val {
+        font-size: 14px; margin-top: 2px; width: 100%;
+        border: 0; background: transparent; color: var(--ink);
+        font-family: inherit; padding: 0; outline: none;
+    }
+
+    .field input::placeholder { color: var(--ink-3); }
+    .field:focus-within { border-color: var(--action); box-shadow: 0 0 0 3px rgba(0, 91, 211, .14); }
+    .field.tap { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .field.tap .chev { color: var(--ink-3); }
+
+    .two { display: flex; gap: 9px; }
+    .two > * { flex: 1; min-width: 0; }
+
+    .money { display: flex; justify-content: space-between; font-size: 12.5px; padding: 5px 0; border-bottom: 1px dashed var(--line-soft); }
+    .money:last-child { border-bottom: 0; }
+    .money span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; }
+    .money.total { border-top: 1px solid var(--line); border-bottom: 0; margin-top: 4px; padding-top: 9px; font-size: 15px; font-weight: 700; }
+    .money.total span:last-child { font-weight: 750; }
+
+    .empty { text-align: center; padding: 44px 16px; color: var(--ink-3); font-size: 12.5px; }
+    .empty .big { font-size: 30px; display: block; margin-bottom: 8px; opacity: .5; }
+
+    .bignum { font-size: 34px; font-weight: 780; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+
+    .spark { display: flex; align-items: flex-end; gap: 4px; height: 54px; }
+    .spark i { flex: 1; background: var(--action); border-radius: 3px 3px 0 0; opacity: .3; }
+    .spark i.hi { opacity: 1; }
+
+    .note { font-size: 11.5px; color: var(--ink-3); padding: 0 3px; line-height: 1.5; }
+
+    .banner {
+        background: var(--info-bg); color: var(--info-ink);
+        border-radius: 11px; padding: 10px 12px; font-size: 11.5px; line-height: 1.5;
+    }
+
+    .banner.warn { background: var(--warn-bg); color: var(--warn-ink); }
+
+    .hero-lock { display: grid; place-items: center; gap: 14px; text-align: center; padding: 30px 18px; }
+
+    .lock-badge {
+        width: 62px; height: 62px; border-radius: 19px;
+        background: var(--warn-bg); color: var(--warn-ink);
+        display: grid; place-items: center; font-size: 27px;
+    }
+
+    .brandmark {
+        width: 46px; height: 46px; border-radius: 14px;
+        background: var(--accent); color: var(--accent-ink);
+        display: grid; place-items: center;
+        font-weight: 800; font-size: 19px; margin: 0 auto;
+    }
+
+    .spacer { flex: 1; min-height: 6px; }
+
+    .stepdots { display: flex; gap: 5px; justify-content: center; }
+    .stepdots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+    .stepdots i.on { background: var(--action); width: 18px; border-radius: 3px; }
+
+    .qty {
+        display: flex; align-items: center; gap: 0;
+        border: 1px solid var(--line); border-radius: 9px; overflow: hidden;
+    }
+
+    .qty button {
+        width: 30px; height: 30px; border: 0; background: var(--surface-2);
+        color: var(--ink); font-size: 15px; cursor: pointer; font-family: inherit;
+    }
+
+    .qty span { width: 32px; text-align: center; font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+    /* ------------------------------------------------------- product form */
+
+    .field textarea {
+        font-size: 14px; margin-top: 2px; width: 100%;
+        border: 0; background: transparent; color: var(--ink);
+        font-family: inherit; padding: 0; outline: none;
+        resize: vertical; min-height: 64px; line-height: 1.5;
+    }
+
+    .field textarea::placeholder { color: var(--ink-3); }
+    .field .val.mute { color: var(--ink-3); }
+    .field .hint { display: block; font-size: 10.5px; color: var(--ink-3); margin-top: 3px; line-height: 1.45; }
+    .field .suffix { font-size: 12px; color: var(--ink-3); font-weight: 600; }
+
+    /* A row of fields the seller rarely touches, folded away behind a tap —
+       the same disclosure the web form uses. */
+    .disc {
+        width: 100%; display: flex; align-items: center; gap: 5px;
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: 11px; padding: 8px 10px;
+        font-family: inherit; color: inherit; cursor: pointer; text-align: left;
+    }
+
+    .disc .tag {
+        font-size: 10px; background: var(--surface-2); color: var(--ink-2);
+        border-radius: 6px; padding: 2px 6px; white-space: nowrap;
+    }
+
+    .disc .chev { margin-left: auto; color: var(--ink-3); font-size: 11px; }
+    .disc .lead { font-size: 12px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Switch — track quantity, physical product, backorders. */
+    .sw {
+        width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        background: var(--surface); border: 1px solid var(--line);
+        border-radius: 11px; padding: 10px 12px;
+        font-size: 13.5px; font-weight: 600; color: inherit;
+        font-family: inherit; cursor: pointer; text-align: left;
+    }
+
+    .sw .sub { display: block; font-size: 11px; font-weight: 500; color: var(--ink-3); margin-top: 2px; }
+
+    .knob {
+        width: 38px; height: 22px; border-radius: 11px;
+        background: var(--line); position: relative; flex-shrink: 0;
+        transition: background .15s;
+    }
+
+    .knob::after {
+        content: ''; position: absolute; top: 2px; left: 2px;
+        width: 18px; height: 18px; border-radius: 50%;
+        background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+        transition: transform .15s;
+    }
+
+    .knob.on { background: var(--action); }
+    .knob.on::after { transform: translateX(16px); }
+
+    /* Photo grid. First tile is the cover. */
+    .media { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+    .tile {
+        position: relative; aspect-ratio: 1; border-radius: 10px;
+        background: var(--surface-2); border: 1px solid var(--line);
+        display: grid; place-items: center; font-size: 25px;
+    }
+
+    .tile.add { border-style: dashed; color: var(--ink-3); cursor: pointer; font-size: 20px; font-family: inherit; }
+
+    .tile .cover {
+        position: absolute; top: 3px; left: 3px;
+        font-size: 8px; font-weight: 700; letter-spacing: .04em;
+        background: var(--ink); color: var(--surface);
+        border-radius: 5px; padding: 1px 4px;
+    }
+
+    .tile .mini {
+        position: absolute; width: 19px; height: 19px; border-radius: 50%;
+        border: 0; background: rgba(0, 0, 0, .58); color: #fff;
+        font-size: 10px; line-height: 1; cursor: pointer; font-family: inherit;
+        display: grid; place-items: center;
+    }
+
+    .tile .mini.x { top: 2px; right: 2px; }
+    .tile .mini.star { bottom: 2px; right: 2px; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
+
+    .tags .tg {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 11.5px; background: var(--surface-2); border: 1px solid var(--line);
+        border-radius: 7px; padding: 3px 4px 3px 8px; color: var(--ink-2);
+    }
+
+    .tags .tg button { border: 0; background: transparent; color: var(--ink-3); cursor: pointer; font-family: inherit; font-size: 11px; padding: 0 2px; }
+
+    /* Value chips inside an option — size, colour, fabric. */
+    .vals { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .vals button {
+        font-size: 12.5px; padding: 6px 11px; border-radius: 9px;
+        background: var(--surface); border: 1px solid var(--line);
+        color: var(--ink); cursor: pointer; font-family: inherit;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+
+    .vals button.on { background: var(--ink); border-color: var(--ink); color: var(--surface); font-weight: 600; }
+    .vals .swatch { width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .18); }
+
+    .check { width: 18px; height: 18px; flex-shrink: 0; color: var(--action); font-size: 14px; text-align: center; }
+
+    .toast {
+        position: absolute; left: 14px; right: 14px; bottom: 82px;
+        background: var(--ink); color: var(--surface);
+        padding: 12px 14px; border-radius: 11px;
+        font-size: 13px; font-weight: 550;
+        opacity: 0; transform: translateY(8px);
+        transition: opacity .2s, transform .2s;
+        pointer-events: none; z-index: 20;
+        text-align: center;
+    }
+
+    .toast.on { opacity: 1; transform: none; }
+
+    .notif { display: flex; gap: 10px; align-items: flex-start; }
+    .notif .dotmark { width: 7px; height: 7px; border-radius: 50%; background: var(--action); margin-top: 6px; flex-shrink: 0; }
+    .notif .dotmark.read { background: transparent; }
+
+    /* ---------------------------------------------------------- desk label */
+
+    .deskhint {
+        position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+        font-size: 11.5px; color: var(--ink-2); background: var(--surface);
+        border: 1px solid var(--line); border-radius: 20px; padding: 6px 14px;
+        font-family: var(--sans); white-space: nowrap;
+    }
+
+    @media (max-width: 460px), (max-height: 700px) { .deskhint { display: none; } }
+</style>
+
+<div class="device">
+    <div class="app">
+        <div class="statusbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+
+        <div class="appbar">
+            <button class="iconbtn" id="backBtn" hidden aria-label="Back">‹</button>
+            <span class="titles">
+                <span class="t" id="barTitle">Sign in</span>
+                <span class="s" id="barSub" hidden></span>
+            </span>
+            <button class="iconbtn bell" id="bellBtn" hidden aria-label="Notifications">
+                <svg viewBox="0 0 20 20" width="19" height="19" fill="currentColor"><path d="M10 2a5 5 0 00-5 5v3.2l-1.3 2.3A1 1 0 004.6 14h10.8a1 1 0 00.9-1.5L15 10.2V7a5 5 0 00-5-5zm0 15a2.5 2.5 0 002.4-2h-4.8A2.5 2.5 0 0010 17z"/></svg>
+                <span class="dot" id="bellDot">3</span>
+            </button>
+            <button class="iconbtn" id="acctBtn" hidden aria-label="Account">☰</button>
+            <button class="iconbtn text" id="saveBtn" hidden>Save</button>
+        </div>
+
+        <div class="stage" id="stage"></div>
+
+        <nav class="tabbar hide" id="tabbar">
+            <button data-tab="home" class="on">
+                <svg viewBox="0 0 20 20"><path d="M10 2.5l7 6V17a1 1 0 01-1 1h-4v-5H8v5H4a1 1 0 01-1-1V8.5l7-6z"/></svg>Home
+            </button>
+            <button data-tab="orders">
+                <svg viewBox="0 0 20 20"><path d="M4 3h12a1 1 0 011 1v3H3V4a1 1 0 011-1zm-1 6h14v7a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm4 2v2h6v-2H7z"/></svg>Orders
+            </button>
+            <button data-tab="products">
+                <svg viewBox="0 0 20 20"><path d="M10 1.8l7 3.5v9.4l-7 3.5-7-3.5V5.3l7-3.5zm0 2.2L5.3 6.3 10 8.6l4.7-2.3L10 4zM4.5 7.8v6.1l4.8 2.4v-6.1L4.5 7.8zm6.7 8.5l4.8-2.4V7.8l-4.8 2.4v6.1z"/></svg>Products
+            </button>
+            <button data-tab="money">
+                <svg viewBox="0 0 20 20"><path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm2 1v2h12V6H4zm0 4v5h12v-5H4zm2 2h4v1.5H6V12z"/></svg>Money
+            </button>
+        </nav>
+
+        <div class="toast" id="toast"></div>
+    </div>
+</div>
+
+<div class="deskhint">Tap through it — sign in, pack an order, add a product</div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ------------------------------------------------------------- data */
+
+    const store = { name: 'Meera Textiles', email: 'meera@store.test', status: 'approved', commission: 10 };
+
+    const money = n => '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const short = n => '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+    let orders = [
+        { id: 338908, buyer: 'Priya Nair', phone: '98765 43210', date: '4 Aug', pay: 'UPI', ff: 'unfulfilled',
+          addr: '42 Beach Road, Besant Nagar<br>Chennai, Tamil Nadu 600090',
+          items: [{ id: 376, name: 'Kanchipuram silk saree', sku: 'MINE-1', qty: 2, packed: 0, total: 9998, emoji: '🥻' }],
+          shared: true },
+        { id: 338902, buyer: 'Rahul Sharma', phone: '99887 76655', date: '4 Aug', pay: 'Cash on Delivery', ff: 'unfulfilled',
+          addr: '7 Nehru Nagar<br>Pune, Maharashtra 411014',
+          items: [{ id: 380, name: 'Cotton kurta set', sku: 'KUR-22', qty: 1, packed: 0, total: 1999, emoji: '👕' }],
+          shared: false },
+        { id: 338877, buyer: 'Anita Kulkarni', phone: '90000 11223', date: '3 Aug', pay: 'UPI', ff: 'partial',
+          addr: '12 MG Road<br>Bengaluru, Karnataka 560001',
+          items: [
+            { id: 384, name: 'Linen dupatta', sku: 'DUP-05', qty: 2, packed: 2, total: 1798, emoji: '🧣' },
+            { id: 385, name: 'Wool shawl', sku: 'SHL-11', qty: 1, packed: 0, total: 3499, emoji: '🧶' }],
+          shared: false },
+        { id: 338840, buyer: 'Vikram Thakur', phone: '98111 22334', date: '2 Aug', pay: 'Net Banking', ff: 'fulfilled',
+          addr: '5 Sector 21<br>Gurugram, Haryana 122016',
+          items: [{ id: 390, name: 'Kanchipuram silk saree', sku: 'MINE-1', qty: 1, packed: 1, total: 4999, emoji: '🥻' }],
+          shared: false, tracking: 'TRK-88213', carrier: 'Delhivery' }
+    ];
+
+    /*
+    | Marketplace-wide reference data. In the app this is one call —
+    | GET /catalog/options — cached for the session.
+    */
+    const catalog = {
+        categories: [
+            { id: 1, name: 'Ethnic wear', parent_id: null },
+            { id: 2, name: 'Sarees', parent_id: 1 },
+            { id: 3, name: 'Kurtas', parent_id: 1 },
+            { id: 4, name: 'Dupattas & stoles', parent_id: 1 },
+            { id: 5, name: 'Winter wear', parent_id: null },
+            { id: 6, name: 'Shawls', parent_id: 5 },
+            { id: 7, name: 'Home linen', parent_id: null }
+        ],
+        taxClasses: [
+            { id: 1, name: 'GST 5%' },
+            { id: 2, name: 'GST 12%' },
+            { id: 3, name: 'GST 18%' }
+        ],
+        // Only `is_variant` attributes can build variants — the rest are
+        // filter facets and never appear on this screen.
+        attributes: [
+            { id: 1, name: 'Size', is_variant: true, values: [
+                { id: 11, value: 'S' }, { id: 12, value: 'M' }, { id: 13, value: 'L' }, { id: 14, value: 'XL' }] },
+            { id: 2, name: 'Colour', is_variant: true, values: [
+                { id: 21, value: 'Red', color: '#c0392b' }, { id: 22, value: 'Indigo', color: '#2c3e91' },
+                { id: 23, value: 'Cream', color: '#efe6d0' }] },
+            { id: 3, name: 'Fabric', is_variant: true, values: [
+                { id: 31, value: 'Cotton' }, { id: 32, value: 'Silk' }, { id: 33, value: 'Linen' }] }
+        ],
+        statuses: ['draft', 'active', 'archived']
+    };
+
+    const category = id => catalog.categories.find(c => c.id === id);
+    const attribute = id => catalog.attributes.find(a => a.id === id);
+    const attrValue = (attrId, valueId) => (attribute(attrId)?.values ?? []).find(v => v.id === valueId);
+
+    /*
+    | Products carry every field the product form edits, named the way the API
+    | names them — `stock`/`low`/`was` are the list-screen shorthands the rest
+    | of this prototype already reads.
+    */
+    let products = [
+        { id: 47, name: 'Kanchipuram silk saree', sku: 'MINE-1', price: 4999, was: 6499, stock: 40, low: 5,
+          status: 'active', emoji: '🥻', type: 'simple', cat: 'Sarees',
+          images: ['🥻', '🧵'], category_id: 2, category_ids: [2], tax_class_id: 1,
+          short_description: 'Handwoven, gold zari border', description: 'Pure mulberry silk, woven in Kanchipuram. Dry clean only.',
+          cost_price: 3100, track_inventory: true, allow_backorder: false, barcode: '8901234567890',
+          requires_shipping: true, weight: 0.65, length: 30, width: 22, height: 6,
+          brand: 'Meera Looms', tags: ['silk', 'wedding'], slug: '',
+          seo_title: 'Kanchipuram silk saree', seo_description: 'Handwoven silk saree with a gold zari border.',
+          attribute_ids: [], variants: [], sold: 128, revenue: 639872, orderCount: 96 },
+
+        { id: 48, name: 'Cotton kurta set', sku: 'KUR-22', price: 1999, was: null, stock: 2, low: 5,
+          status: 'active', emoji: '👕', type: 'variable', cat: 'Ethnic wear',
+          images: ['👕'], category_id: 3, category_ids: [3], tax_class_id: 1,
+          short_description: 'Kurta with matching pyjama', description: '',
+          cost_price: null, track_inventory: true, allow_backorder: false, barcode: '',
+          requires_shipping: true, weight: 0.4, length: null, width: null, height: null,
+          brand: '', tags: ['cotton'], slug: '', seo_title: '', seo_description: '',
+          attribute_ids: [1],
+          variants: [
+            { id: 91, name: 'S', sku: 'KUR-22-S', price: 1999, compare_at_price: null, stock_quantity: 0, weight: 0.4, is_active: true, values: [{ attribute_id: 1, attribute_value_id: 11 }] },
+            { id: 92, name: 'M', sku: 'KUR-22-M', price: 1999, compare_at_price: null, stock_quantity: 1, weight: 0.4, is_active: true, values: [{ attribute_id: 1, attribute_value_id: 12 }] },
+            { id: 93, name: 'L', sku: 'KUR-22-L', price: 2199, compare_at_price: null, stock_quantity: 1, weight: 0.4, is_active: true, values: [{ attribute_id: 1, attribute_value_id: 13 }] }
+          ],
+          sold: 54, revenue: 107946, orderCount: 51 },
+
+        { id: 49, name: 'Wool shawl', sku: 'SHL-11', price: 3499, was: null, stock: 18, low: 5,
+          status: 'draft', emoji: '🧶', type: 'simple', cat: 'Winter wear',
+          images: ['🧶'], category_id: 6, category_ids: [6], tax_class_id: 2,
+          short_description: '', description: '', cost_price: null,
+          track_inventory: true, allow_backorder: false, barcode: '',
+          requires_shipping: true, weight: 0.8, length: null, width: null, height: null,
+          brand: '', tags: [], slug: '', seo_title: '', seo_description: '',
+          attribute_ids: [], variants: [], sold: 12, revenue: 41988, orderCount: 12 },
+
+        { id: 50, name: 'Linen dupatta', sku: 'DUP-05', price: 899, was: 1199, stock: 60, low: 10,
+          status: 'active', emoji: '🧣', type: 'simple', cat: 'Ethnic wear',
+          images: ['🧣'], category_id: 4, category_ids: [4], tax_class_id: 1,
+          short_description: '', description: '', cost_price: 520,
+          track_inventory: true, allow_backorder: true, barcode: '',
+          requires_shipping: true, weight: 0.2, length: null, width: null, height: null,
+          brand: '', tags: ['linen'], slug: '', seo_title: '', seo_description: '',
+          attribute_ids: [], variants: [], sold: 240, revenue: 215760, orderCount: 187 },
+
+        { id: 51, name: 'Block print stole', sku: 'STL-03', price: 1299, was: null, stock: 0, low: 5,
+          status: 'active', emoji: '🧵', type: 'simple', cat: 'Ethnic wear',
+          images: ['🧵'], category_id: 4, category_ids: [], tax_class_id: 1,
+          short_description: '', description: '', cost_price: null,
+          track_inventory: true, allow_backorder: false, barcode: '',
+          requires_shipping: true, weight: 0.15, length: null, width: null, height: null,
+          brand: '', tags: [], slug: '', seo_title: '', seo_description: '',
+          attribute_ids: [], variants: [], sold: 33, revenue: 42867, orderCount: 30 }
+    ];
+
+    const payouts = [
+        { id: 42, num: 'PAY-00042', status: 'paid', from: '1 Jul', to: '15 Jul', orders: 24, gross: 47000, comm: 4700, refunded: 0, net: 42300 },
+        { id: 41, num: 'PAY-00041', status: 'processing', from: '16 Jun', to: '30 Jun', orders: 18, gross: 14200, comm: 1420, refunded: 480, net: 12300 },
+        { id: 40, num: 'PAY-00040', status: 'paid', from: '1 Jun', to: '15 Jun', orders: 21, gross: 38000, comm: 3800, refunded: 900, net: 33300 }
+    ];
+
+    const requests = [
+        { id: 17, num: 'CAN-00017', kind: 'Cancellation', status: 'pending', order: 338908, date: '5 Aug',
+          reason: 'Customer changed their mind', by: 'customer',
+          note: 'Ordered the wrong colour, please cancel before it ships.',
+          items: [{ name: 'Kanchipuram silk saree', qty: '1 of 2', amount: 4999, emoji: '🥻' }],
+          refundReq: true, restock: true, amount: 4999 },
+        { id: 9, num: 'REF-00009', kind: 'Refund', status: 'approved', order: 338840, date: '3 Aug',
+          reason: 'Item arrived damaged', by: 'customer',
+          note: 'Pallu had a tear near the border.',
+          items: [{ name: 'Kanchipuram silk saree', qty: '1 of 1', amount: 4999, emoji: '🥻' }],
+          refundReq: true, restock: false, amount: 4999, breakdown: { items: 4999, shipping: 79, tax: 0, adj: 0, total: 5078 } }
+    ];
+
+    let team = [
+        { name: 'Meera Shah', email: 'meera@store.test', you: true, active: true },
+        { name: 'Packing desk', email: 'packing@meeratextiles.in', you: false, active: true },
+        { name: 'Weekend cover', email: 'weekend@meeratextiles.in', you: false, active: false }
+    ];
+
+    const rates = [
+        { zone: 'Tamil Nadu', list: [
+            { name: 'Standard', detail: '2–5 days', rate: 60, editable: true },
+            { name: 'Free above ₹2,000', detail: 'Orders over ₹2,000', rate: 0, editable: true } ] },
+        { zone: 'Rest of India', list: [
+            { name: 'Standard', detail: '4–8 days', rate: 120, editable: true },
+            { name: 'Marketplace default', detail: 'Applies where you set nothing', rate: 99, editable: false } ] }
+    ];
+
+    const notifications = [
+        { t: 'New order #338908', b: '₹9,998 from Priya Nair', w: '12m ago', read: false },
+        { t: 'Cancellation CAN-00017 needs your response', b: 'Order #338908', w: '1h ago', read: false },
+        { t: 'Payout PAY-00042 was paid', b: '₹42,300 into HDFC ••••4821', w: 'Yesterday', read: false },
+        { t: 'Cotton kurta set is running low', b: '2 left, threshold is 5', w: '2d ago', read: true }
+    ];
+
+    /* --------------------------------------------------------- app state */
+
+    let stack = ['login'];
+    let ordersFilter = 'unfulfilled';
+    let productsFilter = 'all';
+    let signedIn = false;
+
+    const $ = id => document.getElementById(id);
+    const stage = $('stage'), tabbar = $('tabbar'), toastEl = $('toast');
+
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+    const ffPill = ff => ff === 'fulfilled' ? '<span class="pill ok">Shipped</span>'
+        : ff === 'partial' ? '<span class="pill info">Partly packed</span>'
+        : '<span class="pill warn">To pack</span>';
+
+    const orderTotal = o => o.items.reduce((s, i) => s + i.total, 0);
+    const orderEarn = o => Math.round(orderTotal(o) * (1 - store.commission / 100) * 100) / 100;
+    const toPack = () => orders.filter(o => o.ff !== 'fulfilled').length;
+    const lowStock = () => products.filter(p => p.stock <= p.low).length;
+    const unread = () => notifications.filter(n => !n.read).length;
+
+    function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('on');
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => toastEl.classList.remove('on'), 2200);
+    }
+
+    /* ------------------------------------------------------- product draft */
+
+    /*
+    | One draft object backs both "New product" and "Edit product", keyed the
+    | way POST/PUT /products expects. Every input on the form writes straight
+    | into it through `data-bind`, so re-rendering the screen never loses what
+    | has been typed.
+    */
+    let draft = null;
+    let open = { pricing: false, inventory: false, shipping: false, seo: false };
+    let focusTag = false;
+
+    // Which values of each option are in play. Shopify lets a seller pick the
+    // three sizes they actually stock rather than every size on the list.
+    let chosen = {};
+
+    const photoPalette = ['📸', '🖼️', '🧵', '✨', '🪡', '🧶', '👗', '🎀'];
+
+    function newDraft(p) {
+        open = {
+            // Anything the product already has must not hide behind a tap.
+            pricing: !!(p && (p.was || p.cost_price)),
+            inventory: false, shipping: false, seo: false
+        };
+
+        draft = p ? {
+            id: p.id, name: p.name, short_description: p.short_description, description: p.description,
+            images: [...p.images], category_id: p.category_id, category_ids: [...p.category_ids],
+            price: p.price, compare_at_price: p.was, cost_price: p.cost_price, tax_class_id: p.tax_class_id,
+            track_inventory: p.track_inventory, stock_quantity: p.stock, low_stock_threshold: p.low,
+            sku: p.sku, barcode: p.barcode, allow_backorder: p.allow_backorder,
+            requires_shipping: p.requires_shipping, weight: p.weight,
+            length: p.length, width: p.width, height: p.height,
+            attribute_ids: [...p.attribute_ids],
+            variants: p.variants.map(v => ({ ...v, values: v.values.map(x => ({ ...x })) })),
+            brand: p.brand, tags: [...p.tags],
+            seo_title: p.seo_title, seo_description: p.seo_description, slug: p.slug,
+            status: p.status, emoji: p.emoji, tagInput: ''
+        } : {
+            id: null, name: '', short_description: '', description: '',
+            images: [], category_id: null, category_ids: [],
+            price: '', compare_at_price: '', cost_price: '', tax_class_id: null,
+            track_inventory: true, stock_quantity: 0, low_stock_threshold: 5,
+            sku: '', barcode: '', allow_backorder: false,
+            requires_shipping: true, weight: '', length: '', width: '', height: '',
+            attribute_ids: [], variants: [], brand: '', tags: [],
+            seo_title: '', seo_description: '', slug: '',
+            status: 'draft', emoji: '🧵', tagInput: ''
+        };
+
+        // Rebuild the chip selection from the variants that already exist.
+        chosen = {};
+        for (const id of draft.attribute_ids) {
+            const used = [...new Set(draft.variants.flatMap(v => v.values)
+                .filter(x => x.attribute_id === id).map(x => x.attribute_value_id))];
+
+            chosen[id] = used.length ? used : (attribute(id)?.values ?? []).map(v => v.id);
+        }
+
+        return draft;
+    }
+
+    /** `data-bind="variants.0.price"` writes through the dotted path. */
+    function setPath(path, value) {
+        const parts = path.split('.');
+        let target = draft;
+
+        while (parts.length > 1) target = target[parts.shift()];
+
+        target[parts[0]] = value;
+    }
+
+    const readPath = path => path.split('.').reduce((o, k) => (o ?? {})[k], draft);
+
+    const variantType = () => draft.variants.length ? 'variable' : 'simple';
+    const variantStock = () => draft.variants.reduce((s, v) => s + (+v.stock_quantity || 0), 0);
+    const variantLabel = v => v.values.map(x => attrValue(x.attribute_id, x.attribute_value_id)?.value)
+        .filter(Boolean).join(' / ') || v.name || 'Variant';
+
+    const marginOf = () => {
+        const price = +draft.price || 0, cost = +draft.cost_price || 0;
+
+        return price && cost
+            ? { profit: price - cost, pct: (((price - cost) / price) * 100).toFixed(1) }
+            : null;
+    };
+
+    const comboKey = values => [...values].sort((a, b) => a.attribute_id - b.attribute_id)
+        .map(v => v.attribute_id + ':' + v.attribute_value_id).join('|');
+
+    /** Cartesian product of the chosen values, keeping rows already edited. */
+    function regenerate() {
+        const groups = draft.attribute_ids
+            .map(id => ({ id, values: chosen[id] ?? [] }))
+            .filter(g => g.values.length);
+
+        if (!groups.length) {
+            draft.variants = [];
+
+            return;
+        }
+
+        let combos = [[]];
+
+        for (const group of groups) {
+            const next = [];
+
+            for (const combo of combos) {
+                for (const valueId of group.values) {
+                    next.push([...combo, { attribute_id: group.id, attribute_value_id: valueId }]);
+                }
+            }
+
+            combos = next;
+        }
+
+        const existing = new Map(draft.variants.map(v => [comboKey(v.values), v]));
+
+        // 100 is the cap the API enforces on `variants`.
+        draft.variants = combos.slice(0, 100).map(values => {
+            const found = existing.get(comboKey(values));
+
+            if (found) return found;
+
+            const label = values.map(v => attrValue(v.attribute_id, v.attribute_value_id)?.value).join(' / ');
+
+            return {
+                id: null, name: label,
+                sku: draft.sku ? draft.sku + '-' + label.replace(/[^a-zA-Z0-9]+/g, '-').toUpperCase() : '',
+                price: draft.price, compare_at_price: draft.compare_at_price,
+                stock_quantity: 0, weight: +draft.weight || 0, is_active: true, values
+            };
+        });
+    }
+
+    const marginText = () => {
+        const m = marginOf();
+
+        return m
+            ? `Profit <strong>${money(m.profit)}</strong> · Margin <strong>${m.pct}%</strong>`
+            : 'Add a price and a cost per item to see profit and margin.';
+    };
+
+    const countLabel = n => `<span style="text-transform:none;letter-spacing:0;font-size:11px;font-weight:600;color:var(--ink-3)">${n}</span>`;
+
+    /**
+     * The form itself — shared by "New product" and the edit screen, because
+     * they are the same fields against the same payload.
+     */
+    function productForm() {
+        const cat = category(draft.category_id);
+        const tax = catalog.taxClasses.find(t => t.id === draft.tax_class_id);
+        const has = draft.variants.length > 0;
+
+        return `
+        <div class="sect">Basics</div>
+        <label class="field"><span class="lbl">Title</span>
+            <input data-bind="name" value="${esc(draft.name)}" placeholder="e.g. Chanderi cotton saree"></label>
+        <label class="field"><span class="lbl">Subtitle</span>
+            <input data-bind="short_description" value="${esc(draft.short_description)}" placeholder="One line shoppers see in listings"></label>
+        <label class="field"><span class="lbl">Description</span>
+            <textarea data-bind="description" rows="4" placeholder="What it is, what it's made of, how it's cared for…">${esc(draft.description)}</textarea></label>
+
+        <div class="sect">Media ${countLabel(draft.images.length + '/10')}</div>
+        <div class="card">
+            <div class="media">
+                ${draft.images.map((img, i) => `<div class="tile">${img}
+                    ${i === 0 ? '<span class="cover">COVER</span>' : ''}
+                    <button class="mini x" data-act="removePhoto:${i}" aria-label="Remove photo">✕</button>
+                    ${i > 0 ? `<button class="mini star" data-act="makeCover:${i}" aria-label="Make cover">★</button>` : ''}
+                </div>`).join('')}
+                ${draft.images.length < 10 ? '<button class="tile add" data-act="addPhoto" aria-label="Add a photo">＋</button>' : ''}
+            </div>
+            <p class="note" style="padding:9px 0 0">First photo is the cover, and the
+                order here is the order shoppers see. JPG, PNG, WEBP or AVIF up to
+                5 MB — upload each one first, then send back its path.</p>
+        </div>
+
+        <div class="sect">Category</div>
+        <button class="field tap" data-go="pickCategory">
+            <span><span class="lbl">Category</span>
+                <span class="val ${cat ? '' : 'mute'}">${cat ? esc(cat.name) : 'Choose'}</span></span>
+            <span class="chev">›</span></button>
+
+        <div class="sect">Pricing</div>
+        <label class="field"><span class="lbl">Price</span>
+            <input type="number" inputmode="decimal" data-bind="price" value="${draft.price}" placeholder="0.00"></label>
+        <button class="disc" data-act="sect:pricing">
+            <span class="tag">Compare-at</span><span class="tag">Cost</span><span class="tag">Tax</span><span class="tag">Margin</span>
+            <span class="chev">${open.pricing ? '▲' : '▼'}</span></button>
+        ${open.pricing ? `
+            <div class="two">
+                <label class="field"><span class="lbl">Compare at</span>
+                    <input type="number" inputmode="decimal" data-bind="compare_at_price" value="${draft.compare_at_price ?? ''}" placeholder="—">
+                    <span class="hint">Struck through next to the price</span></label>
+                <label class="field"><span class="lbl">Cost per item</span>
+                    <input type="number" inputmode="decimal" data-bind="cost_price" value="${draft.cost_price ?? ''}" placeholder="—">
+                    <span class="hint">Only you ever see this</span></label>
+            </div>
+            <button class="field tap" data-go="pickTax">
+                <span><span class="lbl">Tax class</span>
+                    <span class="val ${tax ? '' : 'mute'}">${tax ? esc(tax.name) : 'No tax class'}</span></span>
+                <span class="chev">›</span></button>
+            <p class="note" id="marginLine">${marginText()}</p>` : ''}
+
+        <div class="sect">Inventory</div>
+        <button class="sw" data-act="toggle:track_inventory">
+            <span>Track quantity<span class="sub">Counts down as orders come in</span></span>
+            <span class="knob ${draft.track_inventory ? 'on' : ''}"></span></button>
+        ${has
+            ? `<div class="banner">Quantity is set per variant below — <strong>${variantStock()}</strong>
+                   in stock across ${draft.variants.length} variants.</div>`
+            : draft.track_inventory
+                ? `<div class="two">
+                    <label class="field"><span class="lbl">Quantity</span>
+                        <input type="number" inputmode="numeric" data-bind="stock_quantity" value="${draft.stock_quantity}"></label>
+                    <label class="field"><span class="lbl">Low stock alert at</span>
+                        <input type="number" inputmode="numeric" data-bind="low_stock_threshold" value="${draft.low_stock_threshold}"></label>
+                   </div>`
+                : '<p class="note">Stock is not tracked, so this never sells out.</p>'}
+        <button class="disc" data-act="sect:inventory">
+            <span class="tag">SKU</span><span class="tag">Barcode</span><span class="tag">Backorders</span>
+            <span class="chev">${open.inventory ? '▲' : '▼'}</span></button>
+        ${open.inventory ? `
+            <div class="two">
+                <label class="field"><span class="lbl">SKU</span>
+                    <input data-bind="sku" value="${esc(draft.sku)}" placeholder="MINE-1"></label>
+                <label class="field"><span class="lbl">Barcode</span>
+                    <input data-bind="barcode" value="${esc(draft.barcode)}" placeholder="ISBN, UPC, GTIN"></label>
+            </div>
+            <button class="sw" data-act="toggle:allow_backorder">
+                <span>Keep selling when out of stock<span class="sub">Orders keep coming in at zero</span></span>
+                <span class="knob ${draft.allow_backorder ? 'on' : ''}"></span></button>` : ''}
+
+        <div class="sect">Shipping</div>
+        <button class="sw" data-act="toggle:requires_shipping">
+            <span>Physical product<span class="sub">Switch off for anything downloaded</span></span>
+            <span class="knob ${draft.requires_shipping ? 'on' : ''}"></span></button>
+        ${draft.requires_shipping ? `
+            <label class="field"><span class="lbl">Weight (kg)</span>
+                <input type="number" inputmode="decimal" data-bind="weight" value="${draft.weight}" placeholder="0.000"></label>
+            <button class="disc" data-act="sect:shipping">
+                <span class="tag">Length</span><span class="tag">Width</span><span class="tag">Height</span>
+                <span class="chev">${open.shipping ? '▲' : '▼'}</span></button>
+            ${open.shipping ? `
+                <div class="two">
+                    <label class="field"><span class="lbl">Length (cm)</span>
+                        <input type="number" inputmode="decimal" data-bind="length" value="${draft.length ?? ''}"></label>
+                    <label class="field"><span class="lbl">Width (cm)</span>
+                        <input type="number" inputmode="decimal" data-bind="width" value="${draft.width ?? ''}"></label>
+                    <label class="field"><span class="lbl">Height (cm)</span>
+                        <input type="number" inputmode="decimal" data-bind="height" value="${draft.height ?? ''}"></label>
+                </div>` : ''}`
+            : '<p class="note">Digital product — no weight or delivery needed.</p>'}
+
+        <div class="sect">Variants ${has ? countLabel(draft.variants.length + ' · ' + variantType()) : ''}</div>
+        ${draft.attribute_ids.length ? `<div class="card flat">
+            ${draft.attribute_ids.map(id => `<button class="row" data-go="option:${id}">
+                <span class="grow"><span class="t"><span class="txt">${esc(attribute(id).name)}</span></span>
+                    <span class="s">${(chosen[id] ?? []).map(v => esc(attrValue(id, v)?.value ?? '')).join(' · ') || 'No values picked yet'}</span></span>
+                <span class="chev">›</span></button>`).join('')}
+        </div>` : ''}
+        <button class="btn ghost" data-go="addOption">＋ Add options like size or colour</button>
+        ${has ? `<div class="card flat">
+            ${draft.variants.map((v, i) => `<button class="row" data-go="variant:${i}">
+                <span class="grow"><span class="t"><span class="txt">${esc(variantLabel(v))}</span>
+                    ${v.is_active ? '' : '<span class="pill mute">Off</span>'}</span>
+                    <span class="s">${esc(v.sku || 'No SKU')} · ${v.stock_quantity} available</span></span>
+                <span class="amt">${short(+v.price || 0)}</span>
+                <span class="chev">›</span></button>`).join('')}
+        </div>
+        <p class="note">Total inventory: ${variantStock()} available. The type is
+            <strong>${variantType()}</strong> — worked out from the variants, never
+            picked by hand.</p>` : ''}
+
+        <div class="sect">Organisation</div>
+        <label class="field"><span class="lbl">Brand</span>
+            <input data-bind="brand" value="${esc(draft.brand)}" placeholder="Optional"></label>
+        <div class="field">
+            <span class="lbl">Tags</span>
+            ${draft.tags.length ? `<div class="tags">${draft.tags.map(t => `<span class="tg">${esc(t)}
+                <button data-act="removeTag:${esc(t)}" aria-label="Remove ${esc(t)}">✕</button></span>`).join('')}</div>` : ''}
+            <input data-tagin data-bind="tagInput" value="${esc(draft.tagInput)}" placeholder="Add a tag and press Enter">
+        </div>
+        <button class="field tap" data-go="moreCats">
+            <span><span class="lbl">Also list under</span>
+                <span class="val ${draft.category_ids.length ? '' : 'mute'}">${draft.category_ids.length
+                    ? draft.category_ids.map(id => esc(category(id)?.name ?? '')).join(', ')
+                    : 'Nothing else'}</span></span>
+            <span class="chev">›</span></button>
+
+        <div class="sect">Search engine listing</div>
+        <button class="disc" data-act="sect:seo">
+            <span class="lead">${esc(draft.seo_title || draft.name || 'How this shows up in search')}</span>
+            <span class="chev">${open.seo ? '▲' : '▼'}</span></button>
+        ${open.seo ? `
+            <label class="field"><span class="lbl">Page title</span>
+                <input data-bind="seo_title" value="${esc(draft.seo_title)}">
+                <span class="hint">${draft.seo_title.length} of 70 characters used</span></label>
+            <label class="field"><span class="lbl">Meta description</span>
+                <textarea data-bind="seo_description" rows="3">${esc(draft.seo_description)}</textarea></label>
+            <label class="field"><span class="lbl">URL handle</span>
+                <input data-bind="slug" value="${esc(draft.slug)}" placeholder="/products/…">
+                <span class="hint">Leave it blank to build one from the title</span></label>` : ''}
+
+        <div class="sect">Status</div>
+        <button class="field tap" data-go="pickStatus">
+            <span><span class="lbl">Status</span>
+                <span class="val" style="text-transform:capitalize">${draft.status}</span></span>
+            <span class="chev">›</span></button>
+        <p class="note">Only <strong>Active</strong> products are visible to
+            shoppers. Save with <strong>Save</strong>, top right — status is a
+            field here, not a second save button.</p>`;
+    }
+
+    /* ----------------------------------------------------------- screens */
+
+    const screens = {
+
+        /* ------------------------------------------------------ getting in */
+
+        login: () => ({
+            bar: { title: 'Sign in' }, chrome: 'bare', plain: true,
+            html: `
+                <div class="spacer"></div>
+                <div style="text-align:center">
+                    <div class="brandmark">C</div>
+                    <div style="font-size:19px;font-weight:750;margin-top:12px;letter-spacing:-.02em">Seller Centre</div>
+                    <div style="font-size:12.5px;color:var(--ink-3);margin-top:2px">Manage your store on the go</div>
+                </div>
+                <div style="height:10px"></div>
+                <label class="field"><span class="lbl">Email</span>
+                    <input type="email" value="meera@store.test" autocomplete="username"></label>
+                <label class="field"><span class="lbl">Password</span>
+                    <input type="password" value="a-good-password" autocomplete="current-password"></label>
+                <button class="btn" data-act="signin">Sign in</button>
+                <div style="text-align:center;font-size:12.5px;color:var(--action);font-weight:600">Forgot your password?</div>
+                <div class="spacer"></div>
+                <div style="text-align:center;font-size:12.5px;color:var(--ink-3)">
+                    New here? <button class="chip" style="border:0;background:transparent;color:var(--action);font-weight:650;padding:0;font-size:12.5px" data-go="register">Open a store</button>
+                </div>`
+        }),
+
+        register: () => ({
+            bar: { title: 'Open a store', sub: 'Step 2 of 2 · Your store' }, chrome: 'back', plain: true,
+            html: `
+                <div class="stepdots"><i></i><i class="on"></i></div>
+                <label class="field"><span class="lbl">Store name</span><input value="Meera Textiles"></label>
+                <label class="field"><span class="lbl">Store email</span><input value="hello@meeratextiles.in"></label>
+                <label class="field"><span class="lbl">Phone</span><input value="98765 43210"></label>
+                <label class="field"><span class="lbl">GST number (optional)</span><input placeholder="27AAPFU0939F1ZV"></label>
+                <p class="note">An admin reviews new stores before you can list
+                    products or take orders. You can fill in your details while
+                    you wait.</p>
+                <div class="spacer"></div>
+                <button class="btn" data-act="register">Create my store</button>`
+        }),
+
+        pending: () => ({
+            bar: { title: store.name, sub: 'Awaiting approval' }, chrome: 'none',
+            html: `
+                <div class="card hero-lock">
+                    <div class="lock-badge">⏳</div>
+                    <div>
+                        <div style="font-size:16px;font-weight:700">We're reviewing your store</div>
+                        <div style="font-size:12.5px;color:var(--ink-2);margin-top:6px;line-height:1.55">
+                            You'll be able to add products and take orders as soon as
+                            an admin approves ${esc(store.name)}.
+                        </div>
+                    </div>
+                </div>
+                <div class="sect">Get ready</div>
+                <div class="card flat">
+                    <button class="row" data-go="storeDetails"><span class="grow"><span class="t"><span class="txt">Store details</span></span><span class="s">Address, logo, description</span></span><span class="chev">›</span></button>
+                    <button class="row" data-go="payoutAccount"><span class="grow"><span class="t"><span class="txt">Payout account</span></span><span class="s">Where we send your money</span></span><span class="pill warn">Add</span></button>
+                    <button class="row" data-go="profile"><span class="grow"><span class="t"><span class="txt">Your profile</span></span><span class="s">Name, phone, password</span></span><span class="chev">›</span></button>
+                </div>
+                <div class="spacer"></div>
+                <button class="btn ghost" data-act="approve">Simulate: admin approves</button>
+                <button class="btn danger" data-act="signout">Sign out</button>`
+        }),
+
+        /* ------------------------------------------------------------ home */
+
+        home: () => {
+            const bars = [22, 38, 30, 61, 45, 72, 55, 88, 100];
+            const top = [...products].slice(0, 2);
+            return {
+                bar: { title: store.name, sub: 'Last 30 days' }, chrome: 'main', tab: 'home',
+                html: `
+                <div class="kpis">
+                    <div class="kpi"><div class="k">Sales</div><div class="v">${short(99980)}</div><div class="d">10 orders</div></div>
+                    <div class="kpi"><div class="k">You earned</div><div class="v">${short(89982)}</div><div class="d">after ${store.commission}% fee</div></div>
+                </div>
+                <div class="card">
+                    <div class="sect" style="padding:0 0 9px">Sales this month</div>
+                    <div class="spark">${bars.map((h, i) => `<i class="${i === bars.length - 1 ? 'hi' : ''}" style="height:${h}%"></i>`).join('')}</div>
+                </div>
+                <div class="sect">Needs attention</div>
+                <div class="card flat">
+                    <button class="row" data-act="goPack"><span class="grow"><span class="t"><span class="txt">Orders to pack</span></span></span><span class="pill warn">${toPack()}</span><span class="chev">›</span></button>
+                    <button class="row" data-go="requests"><span class="grow"><span class="t"><span class="txt">Cancellation &amp; refund requests</span></span></span><span class="pill crit">${requests.filter(r => r.status === 'pending').length}</span><span class="chev">›</span></button>
+                    <button class="row" data-act="goLow"><span class="grow"><span class="t"><span class="txt">Products running low</span></span></span><span class="pill warn">${lowStock()}</span><span class="chev">›</span></button>
+                </div>
+                <div class="sect">Best sellers <a data-go="products">All products</a></div>
+                <div class="card flat">
+                    ${top.map(p => `<button class="row" data-go="product:${p.id}">
+                        <span class="thumb">${p.emoji}</span>
+                        <span class="grow"><span class="t"><span class="txt">${esc(p.name)}</span></span><span class="s">${p.stock} in stock</span></span>
+                        <span class="amt">${short(p.price)}</span></button>`).join('')}
+                </div>`
+            };
+        },
+
+        /* ---------------------------------------------------------- orders */
+
+        orders: () => {
+            const f = ordersFilter;
+            const list = orders.filter(o => f === 'all' ? true : f === 'unfulfilled' ? o.ff !== 'fulfilled' : o.ff === f);
+            return {
+                bar: { title: 'Orders', sub: `${toPack()} to pack` }, chrome: 'main', tab: 'orders',
+                html: `
+                <div class="chips">
+                    <button class="chip ${f === 'unfulfilled' ? 'on' : ''}" data-filter="orders:unfulfilled">To pack ${toPack()}</button>
+                    <button class="chip ${f === 'fulfilled' ? 'on' : ''}" data-filter="orders:fulfilled">Shipped ${orders.filter(o => o.ff === 'fulfilled').length}</button>
+                    <button class="chip ${f === 'all' ? 'on' : ''}" data-filter="orders:all">All ${orders.length}</button>
+                </div>
+                ${list.length ? `<div class="card flat">${list.map(o => `
+                    <button class="row" data-go="order:${o.id}">
+                        <span class="grow">
+                            <span class="t"><span class="txt">#${o.id}</span> ${ffPill(o.ff)}</span>
+                            <span class="s">${o.items.length} item${o.items.length > 1 ? 's' : ''} · ${esc(o.buyer)} · ${o.date}</span>
+                        </span>
+                        <span class="amt">${short(orderTotal(o))}</span>
+                    </button>`).join('')}</div>`
+                : `<div class="empty"><span class="big">📦</span>Nothing here.<br>New orders land in this tab.</div>`}`
+            };
+        },
+
+        order: id => {
+            const o = orders.find(x => x.id === +id);
+            const total = orderTotal(o), comm = Math.round(total * store.commission) / 100;
+            return {
+                bar: { title: '#' + o.id, sub: `${o.date} · Paid by ${o.pay}` }, chrome: 'back',
+                html: `
+                ${o.shared ? `<div class="banner">This basket is shared with another seller. You only see and pack your own items.</div>` : ''}
+                <div class="sect">Your items</div>
+                <div class="card flat">
+                    ${o.items.map(i => `<div class="row static">
+                        <span class="thumb">${i.emoji}</span>
+                        <span class="grow"><span class="t"><span class="txt">${esc(i.name)}</span></span>
+                            <span class="s">${i.sku} · Qty ${i.qty}${i.packed ? ` · ${i.packed} packed` : ''}</span></span>
+                        <span class="amt">${short(i.total)}</span></div>`).join('')}
+                </div>
+                <div class="card">
+                    <div class="money"><span>Items</span><span>${money(total)}</span></div>
+                    <div class="money"><span>Commission (${store.commission}%)</span><span>−${money(comm)}</span></div>
+                    <div class="money total"><span>You earn</span><span>${money(total - comm)}</span></div>
+                </div>
+                ${o.tracking ? `<div class="sect">Shipment</div>
+                <div class="card"><div class="money"><span>Carrier</span><span>${o.carrier}</span></div>
+                <div class="money"><span>Tracking</span><span>${o.tracking}</span></div></div>` : ''}
+                <div class="sect">Deliver to</div>
+                <div class="card">
+                    <div style="font-size:13.5px;font-weight:650">${esc(o.buyer)}</div>
+                    <div style="font-size:12px;color:var(--ink-2);line-height:1.55;margin-top:3px">${o.addr}<br>${o.phone}</div>
+                </div>
+                <p class="note">The buyer's email and order history aren't shared with sellers.</p>
+                <div class="spacer"></div>
+                ${o.ff !== 'fulfilled'
+                    ? `<button class="btn" data-go="fulfil:${o.id}">Pack &amp; ship</button>`
+                    : `<button class="btn ghost" disabled>Shipped ${o.date}</button>`}
+                <button class="btn ghost" data-act="note">Add a note</button>`
+            };
+        },
+
+        fulfil: id => {
+            const o = orders.find(x => x.id === +id);
+            return {
+                bar: { title: 'Pack & ship', sub: '#' + o.id }, chrome: 'back',
+                html: `
+                <p class="note">Set how many of each you're sending. Leave one at
+                    zero to ship it later.</p>
+                <div class="card flat">
+                    ${o.items.map(i => `<div class="row static">
+                        <span class="thumb">${i.emoji}</span>
+                        <span class="grow"><span class="t"><span class="txt">${esc(i.name)}</span></span>
+                            <span class="s">Ordered ${i.qty}</span></span>
+                        <span class="qty">
+                            <button data-qty="${i.id}:-1" aria-label="Less">−</button>
+                            <span id="q${i.id}">${i.packed || i.qty}</span>
+                            <button data-qty="${i.id}:1" aria-label="More">+</button>
+                        </span></div>`).join('')}
+                </div>
+                <div class="sect">Shipment</div>
+                <label class="field"><span class="lbl">Carrier</span><input value="Delhivery"></label>
+                <label class="field"><span class="lbl">Tracking number</span><input placeholder="TRK-00000" value="TRK-99120"></label>
+                <div class="spacer"></div>
+                <button class="btn" data-act="fulfil:${o.id}">Mark as shipped</button>`
+            };
+        },
+
+        /* -------------------------------------------------------- products */
+
+        products: () => {
+            const f = productsFilter;
+            const list = products.filter(p => f === 'all' ? true : f === 'low' ? p.stock <= p.low : p.status === f);
+            return {
+                bar: { title: 'Products', sub: `${products.length} listed` }, chrome: 'main', tab: 'products',
+                html: `
+                <div class="chips">
+                    <button class="chip ${f === 'all' ? 'on' : ''}" data-filter="products:all">All ${products.length}</button>
+                    <button class="chip ${f === 'active' ? 'on' : ''}" data-filter="products:active">Active ${products.filter(p => p.status === 'active').length}</button>
+                    <button class="chip ${f === 'draft' ? 'on' : ''}" data-filter="products:draft">Draft ${products.filter(p => p.status === 'draft').length}</button>
+                    <button class="chip ${f === 'low' ? 'on' : ''}" data-filter="products:low">Low stock ${lowStock()}</button>
+                </div>
+                ${list.length ? `<div class="card flat">${list.map(p => `
+                    <button class="row" data-go="product:${p.id}">
+                        <span class="thumb">${p.emoji}</span>
+                        <span class="grow"><span class="t"><span class="txt">${esc(p.name)}</span></span>
+                            <span class="s">${short(p.price)} · ${p.stock === 0 ? 'Out of stock' : p.stock + ' in stock'}</span></span>
+                        ${p.status === 'draft' ? '<span class="pill mute">Draft</span>'
+                            : p.stock === 0 ? '<span class="pill crit">Out</span>'
+                            : p.stock <= p.low ? '<span class="pill warn">Low</span>'
+                            : '<span class="pill ok">Active</span>'}
+                    </button>`).join('')}</div>`
+                : `<div class="empty"><span class="big">🏷️</span>Nothing matches that filter.</div>`}
+                <button class="btn" data-go="newProduct">Add a product</button>`
+            };
+        },
+
+        /*
+        | The product form. One screen for both "New product" and editing an
+        | existing one — the same fields the seller web panel carries, with the
+        | rarely-touched ones folded behind a disclosure row. Every field maps
+        | to a key on POST/PUT /api/seller/products.
+        */
+        product: id => {
+            const p = products.find(x => x.id === +id);
+
+            if (!draft || draft.id !== p.id) newDraft(p);
+
+            return {
+                bar: { title: p.name, sub: p.sku || 'No SKU' }, chrome: 'back-save',
+                html: `
+                <div class="kpis" style="grid-template-columns:1fr 1fr 1fr">
+                    <div class="kpi"><div class="k">Sold</div><div class="v" style="font-size:16px">${p.sold}</div></div>
+                    <div class="kpi"><div class="k">Revenue</div><div class="v" style="font-size:16px">${short(p.revenue)}</div></div>
+                    <div class="kpi"><div class="k">Orders</div><div class="v" style="font-size:16px">${p.orderCount}</div></div>
+                </div>
+                ${productForm()}
+                <div class="spacer"></div>
+                <button class="btn danger" data-act="delete:${p.id}">Delete this product</button>`
+            };
+        },
+
+        newProduct: () => {
+            if (!draft || draft.id !== null) newDraft(null);
+
+            return { bar: { title: 'New product' }, chrome: 'close-save', html: productForm() };
+        },
+
+        /* ------------------------------------------- pickers off the form */
+
+        pickCategory: () => ({
+            bar: { title: 'Category' }, chrome: 'back',
+            html: `
+                <p class="note">Sets the tax rate and where the product shows up
+                    in browse.</p>
+                <div class="card flat">
+                    ${catalog.categories.map(c => `<button class="row" data-act="setCategory:${c.id}">
+                        <span class="grow"><span class="t"><span class="txt" style="${c.parent_id ? 'padding-left:12px;font-weight:500' : ''}">${esc(c.name)}</span></span></span>
+                        <span class="check">${draft.category_id === c.id ? '✓' : ''}</span></button>`).join('')}
+                </div>`
+        }),
+
+        moreCats: () => ({
+            bar: { title: 'Also list under', sub: `${draft.category_ids.length} chosen` }, chrome: 'back',
+            html: `
+                <p class="note">Extra places this product appears, on top of its
+                    main category.</p>
+                <div class="card flat">
+                    ${catalog.categories.map(c => `<button class="row" data-act="toggleCat:${c.id}">
+                        <span class="grow"><span class="t"><span class="txt" style="${c.parent_id ? 'padding-left:12px;font-weight:500' : ''}">${esc(c.name)}</span></span></span>
+                        <span class="check">${draft.category_ids.includes(c.id) ? '✓' : ''}</span></button>`).join('')}
+                </div>`
+        }),
+
+        pickTax: () => ({
+            bar: { title: 'Tax class' }, chrome: 'back',
+            html: `
+                <div class="card flat">
+                    <button class="row" data-act="setTax:0">
+                        <span class="grow"><span class="t"><span class="txt">No tax class</span></span></span>
+                        <span class="check">${draft.tax_class_id ? '' : '✓'}</span></button>
+                    ${catalog.taxClasses.map(t => `<button class="row" data-act="setTax:${t.id}">
+                        <span class="grow"><span class="t"><span class="txt">${esc(t.name)}</span></span></span>
+                        <span class="check">${draft.tax_class_id === t.id ? '✓' : ''}</span></button>`).join('')}
+                </div>`
+        }),
+
+        pickStatus: () => {
+            const blurb = {
+                draft: 'Only you can see it. Nothing sells.',
+                active: 'Live on the marketplace, ready to sell.',
+                archived: 'Hidden and out of the way, but not deleted.'
+            };
+
+            return {
+                bar: { title: 'Status' }, chrome: 'back',
+                html: `
+                <div class="card flat">
+                    ${catalog.statuses.map(s => `<button class="row" data-act="setStatus:${s}">
+                        <span class="grow"><span class="t"><span class="txt" style="text-transform:capitalize">${s}</span></span>
+                            <span class="s">${blurb[s]}</span></span>
+                        <span class="check">${draft.status === s ? '✓' : ''}</span></button>`).join('')}
+                </div>`
+            };
+        },
+
+        /* --------------------------------------------------------- variants */
+
+        addOption: () => {
+            const unused = catalog.attributes.filter(a => a.is_variant && !draft.attribute_ids.includes(a.id));
+
+            return {
+                bar: { title: 'Add an option' }, chrome: 'back',
+                html: unused.length ? `
+                <p class="note">Options come from the marketplace — you pick which
+                    of their values you stock.</p>
+                <div class="card flat">
+                    ${unused.map(a => `<button class="row" data-act="addOption:${a.id}">
+                        <span class="grow"><span class="t"><span class="txt">${esc(a.name)}</span></span>
+                            <span class="s">${a.values.map(v => esc(v.value)).join(' · ')}</span></span>
+                        <span class="chev">›</span></button>`).join('')}
+                </div>`
+                : `<div class="empty"><span class="big">🎚️</span>Every option is already on this product.</div>`
+            };
+        },
+
+        option: attrId => {
+            const a = attribute(+attrId);
+            const picked = chosen[+attrId] ?? [];
+
+            return {
+                bar: { title: a.name, sub: 'Pick the ones you stock' }, chrome: 'back',
+                html: `
+                <div class="card">
+                    <div class="vals">
+                        ${a.values.map(v => `<button class="${picked.includes(v.id) ? 'on' : ''}" data-act="toggleValue:${a.id}-${v.id}">
+                            ${v.color ? `<span class="swatch" style="background:${v.color}"></span>` : ''}${esc(v.value)}</button>`).join('')}
+                    </div>
+                </div>
+                <p class="note">Every combination across your options becomes a
+                    variant with its own price, stock and SKU. Rows you have
+                    already edited are kept.</p>
+                <button class="btn" data-act="doneOption">Done</button>
+                <div class="spacer"></div>
+                <button class="btn danger" data-act="removeOption:${a.id}">Remove this option</button>`
+            };
+        },
+
+        variant: index => {
+            const i = +index;
+            const v = draft.variants[i];
+
+            return {
+                bar: { title: variantLabel(v), sub: 'Variant' }, chrome: 'back',
+                html: `
+                <div class="two">
+                    <label class="field"><span class="lbl">Price</span><input type="number" inputmode="decimal" data-bind="variants.${i}.price" value="${v.price}"></label>
+                    <label class="field"><span class="lbl">Available</span><input type="number" inputmode="numeric" data-bind="variants.${i}.stock_quantity" value="${v.stock_quantity}"></label>
+                </div>
+                <label class="field"><span class="lbl">SKU</span><input data-bind="variants.${i}.sku" value="${esc(v.sku ?? '')}" placeholder="Optional"></label>
+                <div class="two">
+                    <label class="field"><span class="lbl">Compare at</span><input type="number" inputmode="decimal" data-bind="variants.${i}.compare_at_price" value="${v.compare_at_price ?? ''}" placeholder="—"></label>
+                    <label class="field"><span class="lbl">Weight (kg)</span><input type="number" inputmode="decimal" data-bind="variants.${i}.weight" value="${v.weight ?? ''}"></label>
+                </div>
+                <button class="sw" data-act="toggleVariant:${i}">
+                    <span>Available to buy<span class="sub">Switch off to hide just this variant</span></span>
+                    <span class="knob ${v.is_active ? 'on' : ''}"></span></button>
+                <div class="spacer"></div>
+                <button class="btn danger" data-act="removeVariant:${i}">Remove this variant</button>`
+            };
+        },
+
+        /* ----------------------------------------------------------- money */
+
+        money: () => {
+            const paid = payouts.filter(p => p.status === 'paid').reduce((s, p) => s + p.net, 0);
+            const prog = payouts.filter(p => p.status !== 'paid').reduce((s, p) => s + p.net, 0);
+            return {
+                bar: { title: 'Money' }, chrome: 'main', tab: 'money',
+                html: `
+                <div class="card" style="text-align:center;padding:20px">
+                    <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);font-weight:700">Not yet paid out</div>
+                    <div class="bignum" style="margin:5px 0">${money(8998.20)}</div>
+                    <div style="font-size:11.5px;color:var(--ink-3)">Earned, but not on a payout yet</div>
+                </div>
+                <div class="kpis">
+                    <div class="kpi"><div class="k">Paid out</div><div class="v" style="font-size:17px">${short(paid)}</div></div>
+                    <div class="kpi"><div class="k">In progress</div><div class="v" style="font-size:17px">${short(prog)}</div></div>
+                </div>
+                <div class="card">
+                    <div class="money"><span>Lifetime sales</span><span>${money(145798)}</span></div>
+                    <div class="money"><span>Commission (${store.commission}%)</span><span>−${money(14580)}</span></div>
+                    <div class="money total"><span>Lifetime earnings</span><span>${money(131218)}</span></div>
+                </div>
+                <div class="sect">Payouts</div>
+                <div class="card flat">
+                    ${payouts.map(p => `<button class="row" data-go="payout:${p.id}">
+                        <span class="grow"><span class="t"><span class="txt">${p.num}</span>
+                            ${p.status === 'paid' ? '<span class="pill ok">Paid</span>' : '<span class="pill warn">Processing</span>'}</span>
+                            <span class="s">${p.from}–${p.to} · ${p.orders} orders</span></span>
+                        <span class="amt">${short(p.net)}</span></button>`).join('')}
+                </div>
+                <p class="note">Payouts are raised by the marketplace on a fortnightly
+                    cycle. There's nothing to request.</p>`
+            };
+        },
+
+        payout: id => {
+            const p = payouts.find(x => x.id === +id);
+            return {
+                bar: { title: p.num, sub: `${p.from} – ${p.to}` }, chrome: 'back',
+                html: `
+                <div class="card" style="text-align:center;padding:20px">
+                    <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);font-weight:700">Net payout</div>
+                    <div class="bignum" style="margin:5px 0">${money(p.net)}</div>
+                    ${p.status === 'paid' ? '<span class="pill ok">Paid into HDFC ••••4821</span>' : '<span class="pill warn">Processing</span>'}
+                </div>
+                <div class="card">
+                    <div class="money"><span>Gross sales</span><span>${money(p.gross)}</span></div>
+                    <div class="money"><span>Commission (${store.commission}%)</span><span>−${money(p.comm)}</span></div>
+                    <div class="money"><span>Refunded to buyers</span><span>−${money(p.refunded)}</span></div>
+                    <div class="money"><span>Adjustments</span><span>${money(0)}</span></div>
+                    <div class="money total"><span>Net</span><span>${money(p.net)}</span></div>
+                </div>
+                <div class="sect">Covered</div>
+                <div class="card"><div class="money"><span>Orders in this period</span><span>${p.orders}</span></div>
+                    <div class="money"><span>Period</span><span>${p.from} – ${p.to}</span></div></div>`
+            };
+        },
+
+        /* -------------------------------------------------------- requests */
+
+        requests: () => ({
+            bar: { title: 'Requests', sub: 'Cancellations & refunds' }, chrome: 'back',
+            html: `
+                <p class="note">Marketplace staff approve or reject these. You can add
+                    your side of the story.</p>
+                <div class="card flat">
+                    ${requests.map(r => `<button class="row" data-go="request:${r.id}">
+                        <span class="grow"><span class="t"><span class="txt">${r.num}</span>
+                            ${r.status === 'pending' ? '<span class="pill warn">Needs reply</span>' : '<span class="pill ok">Approved</span>'}</span>
+                            <span class="s">${r.kind} · #${r.order} · ${r.date}</span></span>
+                        <span class="amt">${short(r.amount)}</span></button>`).join('')}
+                </div>`
+        }),
+
+        request: id => {
+            const r = requests.find(x => x.id === +id);
+            return {
+                bar: { title: r.num, sub: `${r.kind} · ${r.status === 'pending' ? 'Pending review' : 'Approved'}` }, chrome: 'back',
+                html: `
+                <div class="card" style="border-left:3px solid var(--warn-ink)">
+                    <div style="font-size:13.5px;font-weight:650">${esc(r.reason)}</div>
+                    <div style="font-size:12px;color:var(--ink-2);margin-top:5px;line-height:1.55">"${esc(r.note)}"</div>
+                    <div style="font-size:11px;color:var(--ink-3);margin-top:8px">Requested by ${r.by} · Order #${r.order} · ${r.date}</div>
+                </div>
+                <div class="sect">Items affected</div>
+                <div class="card flat">
+                    ${r.items.map(i => `<div class="row static"><span class="thumb">${i.emoji}</span>
+                        <span class="grow"><span class="t"><span class="txt">${esc(i.name)}</span></span><span class="s">Qty ${i.qty}</span></span>
+                        <span class="amt">${short(i.amount)}</span></div>`).join('')}
+                </div>
+                <div class="card">
+                    ${r.breakdown ? `
+                        <div class="money"><span>Items</span><span>${money(r.breakdown.items)}</span></div>
+                        <div class="money"><span>Shipping</span><span>${money(r.breakdown.shipping)}</span></div>
+                        <div class="money total"><span>Refund total</span><span>${money(r.breakdown.total)}</span></div>`
+                    : `<div class="money"><span>Refund requested</span><span>${r.refundReq ? 'Yes' : 'No'}</span></div>
+                       <div class="money"><span>Restock</span><span>${r.restock ? 'Yes' : 'No'}</span></div>
+                       <div class="money total"><span>Amount</span><span>${money(r.amount)}</span></div>`}
+                </div>
+                <div class="spacer"></div>
+                ${r.status === 'pending' ? `
+                    <label class="field"><span class="lbl">Your response</span>
+                        <input placeholder="Already packed — can we ship instead?"></label>
+                    <button class="btn" data-act="respond">Send response</button>`
+                : `<div class="banner">Staff approved this on 4 Aug. The amount is deducted from your next payout.</div>`}`
+            };
+        },
+
+        /* --------------------------------------------------------- account */
+
+        account: () => ({
+            bar: { title: 'Account' }, chrome: 'back',
+            html: `
+                <div class="card" style="display:flex;gap:11px;align-items:center">
+                    <span class="thumb" style="width:48px;height:48px;border-radius:13px;font-size:20px">🧵</span>
+                    <span class="grow">
+                        <span style="display:block;font-size:15px;font-weight:700">${esc(store.name)}</span>
+                        <span style="display:block;font-size:11.5px;color:var(--ink-3)">${esc(store.email)}</span>
+                    </span>
+                    <span class="pill ok">Approved</span>
+                </div>
+                <div class="sect">Store</div>
+                <div class="card flat">
+                    <button class="row" data-go="storeDetails"><span class="grow"><span class="t"><span class="txt">Store details</span></span></span><span class="chev">›</span></button>
+                    <button class="row" data-go="payoutAccount"><span class="grow"><span class="t"><span class="txt">Payout account</span></span><span class="s">HDFC ••••4821</span></span><span class="chev">›</span></button>
+                    <button class="row" data-go="shipping"><span class="grow"><span class="t"><span class="txt">Delivery charges</span></span><span class="s">Your rates per zone</span></span><span class="chev">›</span></button>
+                    <button class="row" data-go="team"><span class="grow"><span class="t"><span class="txt">Team</span></span><span class="s">${team.filter(m => m.active).length} active logins</span></span><span class="chev">›</span></button>
+                    <div class="row static"><span class="grow"><span class="t"><span class="txt">Commission</span></span><span class="s">Set by the marketplace</span></span><span class="amt">${store.commission}%</span></div>
+                </div>
+                <div class="sect">You</div>
+                <div class="card flat">
+                    <button class="row" data-go="profile"><span class="grow"><span class="t"><span class="txt">Name, phone, email</span></span></span><span class="chev">›</span></button>
+                    <button class="row" data-go="password"><span class="grow"><span class="t"><span class="txt">Change password</span></span></span><span class="chev">›</span></button>
+                    <button class="row" data-go="devices"><span class="grow"><span class="t"><span class="txt">Signed-in devices</span></span><span class="s">iPhone 15 · iPad</span></span><span class="pill mute">2</span></button>
+                </div>
+                <div class="spacer"></div>
+                <button class="btn ghost" data-act="signout">Sign out</button>`
+        }),
+
+        storeDetails: () => ({
+            bar: { title: 'Store details' }, chrome: 'back-save',
+            html: `
+                <div class="card" style="display:flex;gap:11px;align-items:center">
+                    <span class="thumb" style="width:56px;height:56px;border-radius:15px;font-size:23px">🧵</span>
+                    <span class="grow"><span class="t" style="font-size:13.5px;font-weight:600">Store logo</span>
+                        <span class="s" style="font-size:11.5px;color:var(--ink-3)">Square, at least 400×400</span></span>
+                    <span class="pill info">Change</span>
+                </div>
+                <label class="field"><span class="lbl">Store name</span><input value="${esc(store.name)}"></label>
+                <label class="field"><span class="lbl">Description</span><input value="Handloom textiles from Kanchipuram."></label>
+                <label class="field"><span class="lbl">Store email</span><input value="hello@meeratextiles.in"></label>
+                <label class="field"><span class="lbl">Phone</span><input value="98765 43210"></label>
+                <div class="sect">Pickup address</div>
+                <label class="field"><span class="lbl">Address line 1</span><input value="18 Weavers Street"></label>
+                <div class="two">
+                    <label class="field"><span class="lbl">City</span><input value="Kanchipuram"></label>
+                    <label class="field"><span class="lbl">Postcode</span><input value="631502"></label>
+                </div>
+                <label class="field"><span class="lbl">GST number</span><input value="33AAPFU0939F1ZV"></label>`
+        }),
+
+        payoutAccount: () => ({
+            bar: { title: 'Payout account' }, chrome: 'back-save',
+            html: `
+                <div class="banner">This is where the marketplace sends your earnings. Double-check it — a wrong IFSC delays payment by days.</div>
+                <button class="field tap" data-act="soon"><span><span class="lbl">Method</span><span class="val">Bank transfer</span></span><span class="chev">›</span></button>
+                <label class="field"><span class="lbl">Account holder</span><input value="Meera Shah"></label>
+                <label class="field"><span class="lbl">Account number</span><input value="50100234814821"></label>
+                <label class="field"><span class="lbl">IFSC</span><input value="HDFC0001234"></label>`
+        }),
+
+        profile: () => ({
+            bar: { title: 'Your profile' }, chrome: 'back-save',
+            html: `
+                <label class="field"><span class="lbl">Name</span><input value="Meera Shah"></label>
+                <label class="field"><span class="lbl">Email</span><input value="${esc(store.email)}"></label>
+                <label class="field"><span class="lbl">Phone</span><input value="98765 43210"></label>
+                <p class="note">This email is what you sign in with.</p>`
+        }),
+
+        password: () => ({
+            bar: { title: 'Change password' }, chrome: 'back',
+            html: `
+                <label class="field"><span class="lbl">Current password</span><input type="password" placeholder="••••••••"></label>
+                <label class="field"><span class="lbl">New password</span><input type="password" placeholder="At least 8 characters"></label>
+                <label class="field"><span class="lbl">Confirm new password</span><input type="password"></label>
+                <div class="banner warn">Changing your password signs you out on every other device. This one stays signed in.</div>
+                <div class="spacer"></div>
+                <button class="btn" data-act="changePw">Change password</button>`
+        }),
+
+        devices: () => ({
+            bar: { title: 'Signed-in devices' }, chrome: 'back',
+            html: `
+                <div class="card flat">
+                    <div class="row static"><span class="grow"><span class="t"><span class="txt">iPhone 15</span> <span class="pill ok">This device</span></span><span class="s">Last used just now</span></span></div>
+                    <div class="row static"><span class="grow"><span class="t"><span class="txt">iPad</span></span><span class="s">Last used 2 days ago</span></span><button class="chip" data-act="revoke">Sign out</button></div>
+                </div>
+                <div class="spacer"></div>
+                <button class="btn ghost" data-act="signoutAll">Sign out everywhere</button>`
+        }),
+
+        team: () => ({
+            bar: { title: 'Team', sub: 'Logins on this store' }, chrome: 'back',
+            html: `
+                <p class="note">Everyone here sees the same orders, products and
+                    money. Only passwords, devices and notifications are private
+                    to each person.</p>
+                <div class="card flat">
+                    ${team.map(m => `<button class="row" data-act="soon">
+                        <span class="thumb" style="font-size:15px">${esc(m.name.charAt(0))}</span>
+                        <span class="grow"><span class="t"><span class="txt">${esc(m.name)}</span>
+                            ${m.you ? '<span class="pill ok">You</span>' : ''}
+                            ${m.active ? '' : '<span class="pill mute">Off</span>'}</span>
+                            <span class="s">${esc(m.email)}</span></span>
+                        <span class="chev">›</span></button>`).join('')}
+                </div>
+                <div class="spacer"></div>
+                <button class="btn" data-go="teamAdd">Add a login</button>`
+        }),
+
+        teamAdd: () => ({
+            bar: { title: 'Add a login' }, chrome: 'close-save',
+            html: `
+                <label class="field"><span class="lbl">Name</span><input placeholder="e.g. Packing desk"></label>
+                <label class="field"><span class="lbl">Email</span><input placeholder="packing@meeratextiles.in"></label>
+                <label class="field"><span class="lbl">Phone</span><input placeholder="Optional"></label>
+                <label class="field"><span class="lbl">Password</span><input type="password" placeholder="At least 8 characters"></label>
+                <label class="field"><span class="lbl">Confirm password</span><input type="password"></label>
+                <p class="note">They'll be able to manage everything on this store,
+                    including adding and removing other logins.</p>
+                <div class="spacer"></div>
+                <button class="btn" data-act="addMember">Create login</button>`
+        }),
+
+        shipping: () => ({
+            bar: { title: 'Delivery charges', sub: 'Your rates per zone' }, chrome: 'back',
+            html: `
+                ${rates.map(r => `
+                    <div class="sect">${esc(r.zone)}</div>
+                    <div class="card flat">
+                        ${r.list.map(x => `<div class="row ${x.editable ? '' : 'static'}">
+                            <span class="grow"><span class="t"><span class="txt">${esc(x.name)}</span>
+                                ${x.editable ? '' : '<span class="pill mute">Marketplace</span>'}</span>
+                                <span class="s">${esc(x.detail)}</span></span>
+                            <span class="amt">${x.rate === 0 ? 'Free' : short(x.rate)}</span>
+                            ${x.editable ? '<span class="chev">›</span>' : ''}</div>`).join('')}
+                    </div>`).join('')}
+                <p class="note">Rates marked <em>Marketplace</em> are the
+                    marketplace's own fallback — they apply where you haven't set
+                    your own, and you can't change them.</p>
+                <div class="spacer"></div>
+                <button class="btn" data-act="soon">Add a rate</button>`
+        }),
+
+        notifications: () => ({
+            bar: { title: 'Notifications' }, chrome: 'back',
+            html: `
+                <div class="card flat">
+                    ${notifications.map(n => `<div class="row static">
+                        <span class="notif grow">
+                            <span class="dotmark ${n.read ? 'read' : ''}"></span>
+                            <span class="grow"><span class="t" style="font-weight:${n.read ? 500 : 650}"><span class="txt">${esc(n.t)}</span></span>
+                            <span class="s">${esc(n.b)}</span></span>
+                        </span>
+                        <span class="s" style="color:var(--ink-3)">${n.w}</span></div>`).join('')}
+                </div>
+                <div class="spacer"></div>
+                <button class="btn ghost" data-act="readAll">Mark all read</button>`
+        })
+    };
+
+    /* --------------------------------------------------------- rendering */
+
+    function render() {
+        const key = stack[stack.length - 1];
+        const [name, arg] = key.split(':');
+        const s = screens[name](arg);
+
+        $('barTitle').textContent = s.bar.title;
+        const sub = $('barSub');
+        sub.textContent = s.bar.sub || '';
+        sub.hidden = !s.bar.sub;
+
+        const c = s.chrome;
+        $('backBtn').hidden = !(c === 'back' || c === 'back-save' || c === 'close-save');
+        $('backBtn').textContent = c === 'close-save' ? '✕' : '‹';
+        $('saveBtn').hidden = !(c === 'back-save' || c === 'close-save');
+        $('bellBtn').hidden = c !== 'main';
+        $('acctBtn').hidden = c !== 'main';
+        $('bellDot').textContent = unread();
+        $('bellDot').hidden = unread() === 0;
+
+        tabbar.classList.toggle('hide', c !== 'main');
+        tabbar.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tab === s.tab));
+
+        stage.innerHTML = `<div class="screen on ${s.plain ? 'plain' : ''}">${s.html}</div>`;
+
+        // Adding a tag re-renders the screen, so put the caret back where the
+        // seller left it — they usually have another tag to type.
+        if (focusTag) {
+            document.querySelector('[data-tagin]')?.focus();
+            focusTag = false;
+        }
+    }
+
+    /** The product form is entered fresh every time, never half-edited. */
+    function go(key) {
+        if (key === 'newProduct') newDraft(null);
+        if (key.startsWith('product:')) newDraft(products.find(p => p.id === +key.split(':')[1]));
+
+        stack.push(key); render();
+    }
+    function back() { if (stack.length > 1) { stack.pop(); render(); } }
+    function root(key) { stack = [key]; render(); }
+
+    /* ----------------------------------------------------------- actions */
+
+    const actions = {
+        signin() { signedIn = true; root('home'); toast('Signed in as ' + store.name); },
+        register() { store.status = 'pending'; signedIn = true; root('pending'); toast('Store created — waiting for approval'); },
+        approve() { store.status = 'approved'; root('home'); toast('Your store was approved'); },
+        signout() { signedIn = false; store.status = 'approved'; root('login'); },
+        signoutAll() { signedIn = false; root('login'); },
+        revoke() { toast('iPad signed out'); },
+        changePw() { back(); toast('Password changed. Other devices signed out.'); },
+        note() { toast('Note added to the order'); },
+        respond() { back(); toast('Response sent to the marketplace'); },
+        readAll() { notifications.forEach(n => n.read = true); render(); },
+        goPack() { ordersFilter = 'unfulfilled'; root('orders'); },
+        goLow() { productsFilter = 'low'; root('products'); },
+        soon() { toast('Not part of this prototype'); },
+        addMember() {
+            team.push({ name: 'New login', email: 'new@meeratextiles.in', you: false, active: true });
+            back();
+            toast('Login created');
+        },
+
+        /* ------------------------------------------------- the product form */
+
+        'sect': key => { open[key] = !open[key]; render(); },
+        'toggle': key => { draft[key] = !draft[key]; render(); },
+
+        addPhoto() {
+            if (draft.images.length >= 10) return toast('Ten photos is the limit');
+
+            // Stands in for POST /uploads — the real app uploads the file and
+            // keeps the `path` that comes back.
+            draft.images.push(photoPalette[draft.images.length % photoPalette.length]);
+            render();
+        },
+
+        'removePhoto': i => { draft.images.splice(+i, 1); render(); },
+        'makeCover': i => {
+            const [img] = draft.images.splice(+i, 1);
+            draft.images.unshift(img);
+            render();
+            toast('New cover photo');
+        },
+
+        'setCategory': id => { draft.category_id = +id; back(); },
+        'toggleCat': id => {
+            const n = +id;
+            draft.category_ids = draft.category_ids.includes(n)
+                ? draft.category_ids.filter(x => x !== n)
+                : [...draft.category_ids, n];
+            render();
+        },
+        'setTax': id => { draft.tax_class_id = +id || null; back(); },
+        'setStatus': s => { draft.status = s; back(); },
+
+        addTag() {
+            const tag = draft.tagInput.trim().replace(/,$/, '');
+
+            if (tag && !draft.tags.includes(tag)) draft.tags.push(tag);
+
+            draft.tagInput = '';
+            focusTag = true;
+            render();
+        },
+
+        'removeTag': tag => { draft.tags = draft.tags.filter(t => t !== tag); render(); },
+
+        'addOption': attrId => {
+            const id = +attrId;
+            draft.attribute_ids.push(id);
+            chosen[id] = [];
+            stack.pop();
+            go('option:' + id);
+        },
+
+        'toggleValue': arg => {
+            const [attrId, valueId] = arg.split('-').map(Number);
+            const list = chosen[attrId] ?? [];
+
+            chosen[attrId] = list.includes(valueId)
+                ? list.filter(v => v !== valueId)
+                : [...list, valueId];
+            render();
+        },
+
+        doneOption() { regenerate(); back(); },
+
+        'removeOption': attrId => {
+            const id = +attrId;
+            draft.attribute_ids = draft.attribute_ids.filter(x => x !== id);
+            delete chosen[id];
+            regenerate();
+            back();
+        },
+
+        'toggleVariant': i => { draft.variants[+i].is_active = !draft.variants[+i].is_active; render(); },
+        'removeVariant': i => { draft.variants.splice(+i, 1); back(); toast('Variant removed'); },
+
+        saveProduct() {
+            if (!draft.name.trim()) return toast('A title is needed');
+            if (draft.price === '' || draft.price === null) return toast('A price is needed');
+
+            // What the app would PUT/POST — always the whole payload, because
+            // anything left out of a PUT is cleared.
+            const saved = {
+                name: draft.name.trim(), sku: draft.sku, price: +draft.price || 0,
+                was: draft.compare_at_price === '' ? null : +draft.compare_at_price,
+                stock: draft.variants.length ? variantStock() : +draft.stock_quantity || 0,
+                low: +draft.low_stock_threshold || 0,
+                status: draft.status, type: variantType(),
+                emoji: draft.images[0] ?? '🧵', images: [...draft.images],
+                cat: category(draft.category_id)?.name ?? '—', category_id: draft.category_id,
+                category_ids: [...draft.category_ids], tax_class_id: draft.tax_class_id,
+                short_description: draft.short_description, description: draft.description,
+                cost_price: draft.cost_price === '' ? null : +draft.cost_price,
+                track_inventory: draft.track_inventory, allow_backorder: draft.allow_backorder,
+                barcode: draft.barcode, requires_shipping: draft.requires_shipping,
+                weight: +draft.weight || 0,
+                length: draft.length === '' ? null : +draft.length,
+                width: draft.width === '' ? null : +draft.width,
+                height: draft.height === '' ? null : +draft.height,
+                brand: draft.brand, tags: [...draft.tags], slug: draft.slug,
+                seo_title: draft.seo_title, seo_description: draft.seo_description,
+                attribute_ids: [...draft.attribute_ids],
+                variants: draft.variants.map(v => ({ ...v, price: +v.price || 0, stock_quantity: +v.stock_quantity || 0 }))
+            };
+
+            if (draft.id) {
+                Object.assign(products.find(p => p.id === draft.id), saved);
+            } else {
+                products.unshift({ id: Math.max(...products.map(p => p.id)) + 1, sold: 0, revenue: 0, orderCount: 0, ...saved });
+            }
+
+            const wasNew = !draft.id;
+            draft = null;
+            back();
+            toast(wasNew
+                ? (saved.status === 'active' ? 'Product published' : 'Saved as a draft')
+                : 'Product saved');
+        },
+
+        'delete': id => {
+            products = products.filter(x => x.id !== +id);
+            back();
+            toast('Product deleted');
+        },
+
+        'fulfil': id => {
+            const o = orders.find(x => x.id === +id);
+            o.items.forEach(i => {
+                const el = document.getElementById('q' + i.id);
+                i.packed = el ? +el.textContent : i.qty;
+            });
+            const done = o.items.every(i => i.packed >= i.qty);
+            o.ff = done ? 'fulfilled' : 'partial';
+            o.carrier = 'Delhivery';
+            o.tracking = 'TRK-99120';
+            stack.pop();
+            render();
+            toast(done ? 'Marked as shipped' : 'Part of the order is on its way');
+        }
+    };
+
+    /* ---------------------------------------------------------- wiring */
+
+    document.addEventListener('click', e => {
+        const t = e.target.closest('[data-go],[data-act],[data-filter],[data-qty]');
+        if (!t) return;
+
+        if (t.dataset.go) { go(t.dataset.go); return; }
+
+        if (t.dataset.filter) {
+            const [which, val] = t.dataset.filter.split(':');
+            if (which === 'orders') ordersFilter = val; else productsFilter = val;
+            render();
+            return;
+        }
+
+        if (t.dataset.qty) {
+            const [id, delta] = t.dataset.qty.split(':');
+            const el = document.getElementById('q' + id);
+            const o = orders.find(x => x.items.some(i => i.id === +id));
+            const item = o.items.find(i => i.id === +id);
+            el.textContent = Math.max(0, Math.min(item.qty, +el.textContent + +delta));
+            return;
+        }
+
+        const [name, arg] = t.dataset.act.split(':');
+        if (actions[name]) actions[name](arg);
+    });
+
+    /*
+    | Every field on the product form writes straight into the draft, so a
+    | re-render — opening a section, adding a photo — never loses a keystroke.
+    */
+    document.addEventListener('input', e => {
+        const el = e.target.closest('[data-bind]');
+        if (!el || !draft) return;
+
+        setPath(el.dataset.bind, el.value);
+
+        // Margin follows price and cost without redrawing the screen under
+        // the caret.
+        const line = $('marginLine');
+        if (line) line.innerHTML = marginText();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' || !e.target.matches('[data-tagin]')) return;
+
+        e.preventDefault();
+        actions.addTag();
+    });
+
+    $('backBtn').addEventListener('click', back);
+
+    $('saveBtn').addEventListener('click', () => {
+        const key = stack[stack.length - 1];
+
+        // The product form owns its save — one action, and status is a field.
+        if (key === 'newProduct' || key.startsWith('product:')) return actions.saveProduct();
+
+        back();
+        toast('Saved');
+    });
+    $('bellBtn').addEventListener('click', () => go('notifications'));
+    $('acctBtn').addEventListener('click', () => go('account'));
+
+    tabbar.querySelectorAll('button').forEach(b =>
+        b.addEventListener('click', () => root(b.dataset.tab)));
+
+    render();
+})();
+</script>
+
+</body>
+</html>

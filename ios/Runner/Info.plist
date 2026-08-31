@@ -38,6 +38,11 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- image_picker: required by the product form's "Add a photo" tile
+	     (Products → New/Edit product → Media) — picking from the gallery
+	     crashes on iOS without this. -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Used to add photos to your product listings.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

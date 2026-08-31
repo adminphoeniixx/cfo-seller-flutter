@@ -20,11 +20,21 @@ import '../../features/orders/presentation/controllers/order_detail_controller.d
 import '../../features/orders/presentation/screens/order_detail_screen.dart';
 import '../../features/orders/presentation/screens/order_fulfil_screen.dart';
 import '../../features/orders/presentation/screens/orders_screen.dart';
+import '../../features/products/domain/catalog_repository.dart';
 import '../../features/products/domain/product_repository.dart';
+import '../../features/products/domain/upload_repository.dart';
 import '../../features/products/presentation/controllers/new_product_controller.dart';
 import '../../features/products/presentation/controllers/product_detail_controller.dart';
+import '../../features/products/presentation/controllers/product_form_controller_base.dart';
 import '../../features/products/presentation/screens/new_product_screen.dart';
+import '../../features/products/presentation/screens/product_add_option_screen.dart';
+import '../../features/products/presentation/screens/product_category_screen.dart';
 import '../../features/products/presentation/screens/product_detail_screen.dart';
+import '../../features/products/presentation/screens/product_more_categories_screen.dart';
+import '../../features/products/presentation/screens/product_option_screen.dart';
+import '../../features/products/presentation/screens/product_status_screen.dart';
+import '../../features/products/presentation/screens/product_tax_class_screen.dart';
+import '../../features/products/presentation/screens/product_variant_screen.dart';
 import '../../features/products/presentation/screens/products_screen.dart';
 import '../../features/requests/domain/request_repository.dart';
 import '../../features/requests/presentation/controllers/request_detail_controller.dart';
@@ -204,10 +214,87 @@ class AppRouter {
         path: '/products/product/:id',
         builder: (context, state) {
           final id = int.parse(state.pathParameters['id']!);
-          Get.put(ProductDetailController(Get.find<ProductRepository>(), id));
-          return const ProductDetailScreen();
+          final tag = 'product-$id';
+          // `NewProductController` and `ProductDetailController` both
+          // register under the shared `ProductFormControllerBase` type, so
+          // each instance needs its own tag — otherwise opening a second
+          // product-form flow overwrites the first one's registration, and
+          // a still-mounted screen from the first flow crashes on a bad
+          // type cast the next time it rebuilds. See that class's doc
+          // comment on `tag`.
+          final ctrl = ProductDetailController(
+            Get.find<ProductRepository>(),
+            id,
+            Get.find<CatalogRepository>(),
+            Get.find<UploadRepository>(),
+          )..tag = tag;
+          Get.put<ProductFormControllerBase>(ctrl, tag: tag);
+          return ProductDetailScreen(tag: tag);
         },
       ),
+
+      // Product-form pickers/sub-editors — operate on whichever product
+      // form controller (new or edit) pushed them, identified by the `tag`
+      // passed through `extra` (see `ProductFormControllerBase.tag`).
+      GoRoute(
+        path: AppRoutes.productCategory,
+        builder: (context, state) => _SimpleScaffold(
+          title: 'Category',
+          child: ProductCategoryScreen(tag: state.extra! as String),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.productMoreCategories,
+        builder: (context, state) => _SimpleScaffold(
+          title: 'Also list under',
+          child: ProductMoreCategoriesScreen(tag: state.extra! as String),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.productTaxClass,
+        builder: (context, state) => _SimpleScaffold(
+          title: 'Tax class',
+          child: ProductTaxClassScreen(tag: state.extra! as String),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.productStatus,
+        builder: (context, state) => _SimpleScaffold(
+          title: 'Status',
+          child: ProductStatusScreen(tag: state.extra! as String),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.productAddOption,
+        builder: (context, state) => _SimpleScaffold(
+          title: 'Add an option',
+          child: ProductAddOptionScreen(tag: state.extra! as String),
+        ),
+      ),
+      GoRoute(
+        path: '/products/form/option/:attributeId',
+        builder: (context, state) {
+          final attributeId = int.parse(state.pathParameters['attributeId']!);
+          return _SimpleScaffold(
+            title: 'Option values',
+            child: ProductOptionScreen(
+              attributeId: attributeId,
+              tag: state.extra! as String,
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/products/form/variant/:index',
+        builder: (context, state) {
+          final index = int.parse(state.pathParameters['index']!);
+          return _SimpleScaffold(
+            title: 'Variant',
+            child: ProductVariantScreen(index: index, tag: state.extra! as String),
+          );
+        },
+      ),
+
       GoRoute(
         path: '/money/payout/:id',
         builder: (context, state) {
@@ -219,14 +306,19 @@ class AppRouter {
 
       GoRoute(
         path: '/products/new',
+        // NewProductScreen owns its own Scaffold/AppAppBar/Save (a real call
+        // to `createProduct`, plus the unsaved-changes confirm on back) —
+        // wrapping it in `_SimpleScaffold` too would double the app bar and
+        // give it a second, fake "Saved" button that never calls the API.
         builder: (context, state) {
-          Get.put(NewProductController(Get.find<ProductRepository>()));
-          return const _SimpleScaffold(
-            title: 'New product',
-            showSave: true,
-            closeStyle: true,
-            child: NewProductScreen(),
-          );
+          const tag = 'new-product';
+          final ctrl = NewProductController(
+            Get.find<ProductRepository>(),
+            Get.find<CatalogRepository>(),
+            Get.find<UploadRepository>(),
+          )..tag = tag;
+          Get.put<ProductFormControllerBase>(ctrl, tag: tag);
+          return const NewProductScreen(tag: tag);
         },
       ),
 

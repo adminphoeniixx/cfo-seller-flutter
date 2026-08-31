@@ -1,42 +1,55 @@
-import 'package:get/get.dart';
-
 import '../../domain/product_repository.dart';
+import 'product_draft.dart';
+import 'product_form_controller_base.dart';
 
-class NewProductController extends GetxController {
+class NewProductController extends ProductFormControllerBase {
   final ProductRepository _repository;
 
-  NewProductController(this._repository);
+  NewProductController(
+    this._repository,
+    super.catalogRepository,
+    super.uploadRepository,
+  );
 
-  final isSubmitting = false.obs;
-  final errorMessage = RxnString();
+  @override
+  void onInit() {
+    super.onInit();
+    _init();
+  }
 
-  Future<bool> submit({
-    required String name,
-    required String price,
-    required String compareAt,
-    required String stock,
-    required String lowAt,
-    required bool asDraft,
-  }) async {
-    if (name.trim().isEmpty || double.tryParse(price) == null) {
-      errorMessage.value = 'Enter a name and a valid price.';
+  Future<void> _init() async {
+    await loadOptions();
+    draft.value = ProductDraft.blank();
+  }
+
+  @override
+  Future<bool> save() async {
+    final d = draft.value;
+    if (d == null) return false;
+
+    if (d.name.trim().isEmpty) {
+      errorMessage.value = 'A title is needed.';
       return false;
     }
+    if (double.tryParse(d.price) == null) {
+      errorMessage.value = 'A valid price is needed.';
+      return false;
+    }
+
     isSubmitting.value = true;
     errorMessage.value = null;
-    final result = await _repository.createProduct(
-      name: name.trim(),
-      price: double.parse(price),
-      compareAt: double.tryParse(compareAt),
-      stock: int.tryParse(stock) ?? 0,
-      lowStockThreshold: int.tryParse(lowAt) ?? 5,
-      asDraft: asDraft,
-    );
+    fieldErrors.value = null;
+
+    final result = await _repository.createProduct(d.toPayload());
+
     isSubmitting.value = false;
     return result.when(
-      success: (_) => true,
+      success: (_) {
+        refreshProductsList();
+        return true;
+      },
       failure: (e) {
-        errorMessage.value = e.message;
+        mapValidationError(e);
         return false;
       },
     );

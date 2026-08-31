@@ -1,4 +1,6 @@
 PODS:
+  - file_selector_macos (0.0.1):
+    - FlutterMacOS
   - Firebase/CoreOnly (12.17.0):
     - FirebaseCore (~> 12.17.0)
   - Firebase/Crashlytics (12.17.0):
@@ -150,6 +152,7 @@ PODS:
     - PromisesObjC (= 2.4.1)
 
 DEPENDENCIES:
+  - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - firebase_analytics (from `Flutter/ephemeral/.symlinks/plugins/firebase_analytics/macos`)
   - firebase_core (from `Flutter/ephemeral/.symlinks/plugins/firebase_core/macos`)
   - firebase_crashlytics (from `Flutter/ephemeral/.symlinks/plugins/firebase_crashlytics/macos`)
@@ -178,6 +181,8 @@ SPEC REPOS:
     - PromisesSwift
 
 EXTERNAL SOURCES:
+  file_selector_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
   firebase_analytics:
     :path: Flutter/ephemeral/.symlinks/plugins/firebase_analytics/macos
   firebase_core:
@@ -194,6 +199,7 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral
 
 SPEC CHECKSUMS:
+  file_selector_macos: 3e56eaea051180007b900eacb006686fd54da150
   Firebase: e8400c058702940d53f31fc0653e4e7a06332326
   firebase_analytics: f79515616f876e67c703036295698e992b51339b
   firebase_core: 0e7f6bce042ff613c2b497e6af4a5f901d855675

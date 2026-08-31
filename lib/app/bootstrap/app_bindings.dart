@@ -23,8 +23,12 @@ import '../../features/notifications/presentation/controllers/notifications_cont
 import '../../features/orders/data/api_order_repository.dart';
 import '../../features/orders/domain/order_repository.dart';
 import '../../features/orders/presentation/controllers/orders_controller.dart';
+import '../../features/products/data/api_catalog_repository.dart';
 import '../../features/products/data/api_product_repository.dart';
+import '../../features/products/data/api_upload_repository.dart';
+import '../../features/products/domain/catalog_repository.dart';
 import '../../features/products/domain/product_repository.dart';
+import '../../features/products/domain/upload_repository.dart';
 import '../../features/products/presentation/controllers/products_controller.dart';
 import '../../features/requests/data/api_request_repository.dart';
 import '../../features/requests/domain/request_repository.dart';
@@ -100,6 +104,14 @@ class AppBindings {
     Get.put<OrderRepository>(ApiOrderRepository(Get.find()), permanent: true);
     Get.put<ProductRepository>(
       ApiProductRepository(Get.find()),
+      permanent: true,
+    );
+    Get.put<CatalogRepository>(
+      ApiCatalogRepository(Get.find()),
+      permanent: true,
+    );
+    Get.put<UploadRepository>(
+      ApiUploadRepository(Get.find()),
       permanent: true,
     );
     Get.put<PayoutRepository>(ApiPayoutRepository(Get.find()), permanent: true);
