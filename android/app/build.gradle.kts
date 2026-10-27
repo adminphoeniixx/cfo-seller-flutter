@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -37,11 +39,30 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        // Keystore credentials are intentionally local-only. See
+        // android/key.properties.example before creating a Play Store upload
+        // bundle. This prevents a release from ever falling back to the
+        // debug certificate.
+        create("release") {
+            val keyPropertiesFile = rootProject.file("key.properties")
+            if (keyPropertiesFile.exists()) {
+                val keyProperties = Properties().apply {
+                    keyPropertiesFile.inputStream().use(::load)
+                }
+                keyAlias = keyProperties.getProperty("keyAlias")
+                keyPassword = keyProperties.getProperty("keyPassword")
+                // `key.properties` lives in android/, so resolve the
+                // configured keystore path from the Android root.
+                storeFile = rootProject.file(keyProperties.getProperty("storeFile"))
+                storePassword = keyProperties.getProperty("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

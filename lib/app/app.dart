@@ -16,7 +16,7 @@ class SellerApp extends StatelessWidget {
     // GetMaterialApp.router already listens for that internally, so it
     // rebuilds itself on a theme change without this widget re-running.
     return GetMaterialApp.router(
-      title: 'Seller Centre',
+      title: 'CFO Seller',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,

@@ -1,6 +1,24 @@
-# seller_app
+# CFO Seller
 
-A new Flutter project.
+Seller operations app for the CFO Marketplace.
+
+## Play Store release
+
+- Upload bundle: `build/app/outputs/bundle/release/app-release.aab`
+- Android application ID: `com.cfo.seller_app`
+- Version: `1.0.0` (version code `1`)
+- Play Store screenshots: `store-assets/screenshots/phone/` (15 emulator-only
+  phone PNGs at 1200 × 1920) and `store-assets/screenshots/tablet/` (6
+  emulator-only landscape tablet PNGs at 2560 × 1600)
+- Launcher source: `assets/branding/cfo_seller_launcher.svg`
+- Play Store icon: `store-assets/cfo-seller-app-icon-512.png` (512 × 512)
+- Play Store feature graphic:
+  `store-assets/cfo-seller-feature-graphic-1024x500.png` (1024 × 500)
+
+The release is signed with the local upload key. Back up the ignored
+`android/cfo-seller-upload-key.jks` and `android/release-signing-backup.txt`
+outside this repository before publishing. In Play Console, enable Play App
+Signing before uploading the first bundle.
 
 ## Getting Started
 
@@ -19,7 +37,7 @@ samples, guidance on mobile development, and a full API reference.
 
 Attached Postman collection me only seller app credentials mile. Admin/customer/other roles ke login details is collection me nahi hain.
 
-**Base URL:** `https://projects-cfo-marketplace-laravel.rmsiry.easypanel.host`
+**Base URL:** `https://callfororders.in`
 
 **Seller login**
 ```text

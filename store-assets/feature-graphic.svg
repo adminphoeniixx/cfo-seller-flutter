@@ -1,0 +1,14 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1024" height="1024" fill="#102A43"/>
+  <g transform="translate(0 262)">
+  <path d="M0 390C155 270 303 418 468 306C625 200 797 322 1024 170V500H0V390Z" fill="#173F63"/>
+  <circle cx="784" cy="250" r="176" fill="#1C4A72"/>
+  <circle cx="784" cy="250" r="142" fill="#102A43"/>
+  <path d="M817 152C793 129 761 116 725 116C654 116 597 174 597 246C597 318 654 376 725 376C761 376 793 363 817 340L779 295C765 308 746 315 725 315C688 315 658 285 658 246C658 207 688 177 725 177C746 177 765 184 779 197L817 152Z" fill="white"/>
+  <path d="M819 216H867C881 216 892 227 892 241V357C892 371 881 382 867 382H770C756 382 745 371 745 357V309H805C822 309 835 296 835 279V241C835 227 828 220 819 216Z" fill="#39C6F4"/>
+  <path d="M819 216C829 220 835 227 835 241V279C835 296 822 309 805 309H745V241C745 227 756 216 770 216H819Z" fill="#1677B8"/>
+  <path d="M772 255H786V269H772V255ZM800 255H814V269H800V255ZM772 283H786V297H772V283ZM800 283H814V297H800V283Z" fill="white"/>
+  <text x="76" y="220" fill="white" font-family="Arial, sans-serif" font-size="68" font-weight="700">CFO Seller</text>
+  <text x="80" y="278" fill="#B8D8EC" font-family="Arial, sans-serif" font-size="23">Manage your store, orders and earnings.</text>
+  </g>
+</svg>

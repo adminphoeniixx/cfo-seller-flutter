@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Play Store upload-key material (keep a secure backup outside this repo).
+/android/key.properties
+/android/*.jks
+/android/*-signing-backup.txt

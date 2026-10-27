@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required by every production build: seller data, authentication and
+         Firebase services communicate with the API over the network. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="seller_app"
+        android:label="CFO Seller"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

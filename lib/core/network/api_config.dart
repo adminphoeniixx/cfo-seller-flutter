@@ -1,13 +1,12 @@
 /// Central place for backend endpoint config. Swap [baseUrl] per
-/// environment via `--dart-define=API_BASE_URL=...` in production; defaults
-/// to the QA/staging server from the Postman collection.
+/// environment via `--dart-define=API_BASE_URL=...`; defaults to the
+/// production server.
 class ApiConfig {
   const ApiConfig._();
 
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue:
-        'https://projects-cfo-marketplace-laravel.rmsiry.easypanel.host',
+    defaultValue: 'https://callfororders.in',
   );
 
   /// Every seller endpoint lives under this prefix — repositories build
